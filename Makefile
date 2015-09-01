@@ -4,6 +4,8 @@ local-install:
 	go vet && go install
 	
 dockerbuild:
+	echo $GOPATH
+	pwd
 	go vet && go install
 	
 build:
