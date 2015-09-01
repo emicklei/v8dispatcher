@@ -1,17 +1,7 @@
 FROM golang:1.5
 
-# to upgrade git
-#RUN apt-get update
-#RUN apt-get upgrade
-#RUN apt-get install software-properties-common python-software-properties -y
-#RUN add-apt-repository ppa:git-core/ppa
-
 RUN apt-get update
-RUN apt-get upgrade
-RUN apt-get -y install git make g++ && apt-get clean
-RUN git --version
-RUN make --version
-RUN g++ --version
+RUN apt-get -y install git subversion make g++ python curl php5-dev chrpath && apt-get clean
 
 # depot tools
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/local/depot_tools
