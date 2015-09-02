@@ -18,6 +18,7 @@ RUN sed -i 's/fetch v8/fetch --nohooks v8/g' Makefile
 RUN make
 RUN make install
 
+RUN go get gopkg.in/inconshreveable/log15.v2
 WORKDIR /go/src/bitbucket.org/emicklei/v8dispatcher
 ADD . /go/src/bitbucket.org/emicklei/v8dispatcher
 
