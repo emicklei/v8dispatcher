@@ -1,7 +1,7 @@
 FROM golang:1.5
 
 RUN apt-get update
-RUN apt-get -y install git subversion make g++ python curl chrpath lbzip2 && apt-get clean
+RUN apt-get -y install git subversion make g++ python curl chrpath lbzip2 pkgconfig && apt-get clean
 RUN make --version
 RUN git --version
 RUN g++ --version
