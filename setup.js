@@ -38,6 +38,10 @@ function callback_dispatch(functionRef /*, args */ ) {
 	callback.apply(this,args)
 }
 
+function go_error_on_perform(reason) {
+	throw reason;
+}
+
 // go_dispatch is used in Javascript to call a Go function.
 // the worker callback in Go will dispatch a MessageSend (unmarshalled from the JSON message).
 //
@@ -62,6 +66,7 @@ function uuid() {
 // function_registry keeps identifyable (by generated id) functions
 //
 function_registry = {};
+function_registry.void = undefined;
 function_registry.put = function(func){
 	var ref = uuid();
 	function_registry[ref] = func;

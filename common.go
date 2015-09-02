@@ -76,16 +76,29 @@ func (d *MessageDispatcher) Dispatch(msg string) {
 		return
 	}
 	result, err := performer.Perform(ms)
-	if err != nil {
-		d.logger.Error("perform failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
-	}
-	if len(ms.Callback) == 0 {
+
+	// all ok, nothing to return
+	if err == nil && len(ms.Callback) == 0 {
 		return
 	}
-	callback := MessageSend{
-		Receiver:  "this",
-		Method:    "callback_dispatch",
-		Arguments: []interface{}{ms.Callback, result}, // first argument of callback_dispatch is the functionRef
+
+	var callback MessageSend
+
+	// perform fail, notify javascript about the error
+	if err != nil {
+		d.logger.Error("perform failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
+		callback = MessageSend{
+			Receiver:  "this",
+			Method:    "go_error_on_perform",
+			Arguments: []interface{}{err.Error()},
+		}
+	} else {
+		// normal return of a value
+		callback = MessageSend{
+			Receiver:  "this",
+			Method:    "callback_dispatch",
+			Arguments: []interface{}{ms.Callback, result}, // first argument of callback_dispatch is the functionRef
+		}
 	}
 	callbackJSON, err := callback.JSON()
 	if err != nil {
