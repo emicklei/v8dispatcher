@@ -14,7 +14,7 @@ ENV PATH $PATH:/usr/local/depot_tools
 # v8worker
 RUN git clone https://github.com/ry/v8worker.git /go/src/github.com/ry/v8worker
 WORKDIR /go/src/github.com/ry/v8worker
-RUN sed -i 's/fetch v8/fetch --nohooks --no-history v8/g' Makefile
+RUN sed -i 's/fetch v8/fetch --nohooks v8/g' Makefile
 RUN make
 RUN make install
 
