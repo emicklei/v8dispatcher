@@ -1,7 +1,7 @@
 FROM golang:1.5
 
 RUN apt-get update
-RUN apt-get -y install git subversion make g++ python curl chrpath tar && apt-get clean
+RUN apt-get -y install git subversion make g++ python curl chrpath lbzip2 && apt-get clean
 RUN make --version
 RUN git --version
 RUN g++ --version
@@ -14,7 +14,7 @@ ENV PATH $PATH:/usr/local/depot_tools
 # v8worker
 RUN git clone https://github.com/ry/v8worker.git /go/src/github.com/ry/v8worker
 WORKDIR /go/src/github.com/ry/v8worker
-RUN sed -i 's/fetch v8/fetch --nohooks v8/g' Makefile
+RUN sed -i 's/fetch v8/fetch --nohooks --no-history v8/g' Makefile
 RUN make
 RUN make install
 
