@@ -31,7 +31,7 @@ function javascript_dispatch(functionName, context /*, args */ ) {
 function callback_dispatch(functionRef /*, args */ ) {
 	var args = [].slice.call(arguments).splice(1);
 	var callback = function_registry.take(functionRef)
-	if (undefined == callback) {
+	if (function_registry.none == callback) {
 		$print("no function for reference:"+functionRef);
 		return;
 	}
@@ -66,14 +66,14 @@ function uuid() {
 // function_registry keeps identifyable (by generated id) functions
 //
 function_registry = {};
-function_registry.void = undefined;
+function_registry.none = undefined;
 function_registry.put = function(func){
 	var ref = uuid();
 	function_registry[ref] = func;
 	return ref;
 }
 
-// take returns the function by its reference and removed it from the registry.
+// take returns the function by its reference and removes it from the registry.
 //
 function_registry.take = function(ref) {
 	var func = function_registry[ref];
@@ -92,5 +92,5 @@ console.print = function(args) {
     $print(msg)
 }
 console.log = function(args) {
-    go_dispatch(undefined, "console", "log", args);
+    go_dispatch(function_registry.none, "console", "log", args);
 }
