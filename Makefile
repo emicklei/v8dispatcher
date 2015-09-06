@@ -1,12 +1,9 @@
-.PHONY: local-install
+.PHONY: dockerbuild
 
-local-install:
-	go vet && go install
-	
 dockerbuild:
-	echo ${GOPATH}
-	pwd
-	go vet && go install
+	go vet
+	go install
+	go -v test
 	
 build:
 	docker build -t v8d-builder . \
