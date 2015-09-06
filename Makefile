@@ -3,7 +3,7 @@
 dockerbuild:
 	go vet
 	go install
-	go -v test
+	go test -v
 	
 build:
 	docker build -t v8d-builder . \
