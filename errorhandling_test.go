@@ -2,9 +2,8 @@ package v8dispatcher
 
 import (
 	"errors"
+	"log"
 	"testing"
-
-	"bitbucket.org/emicklei/firespark/logger"
 )
 
 func TestHandleErrorInGo(t *testing.T) {
@@ -22,6 +21,6 @@ func TestHandleErrorInGo(t *testing.T) {
 type BadThings struct{}
 
 func (b BadThings) Perform(msg MessageSend) (interface{}, error) {
-	logger.Logger.Info("perform", "msg", msg.String())
+	log.Println("perform", "msg", msg.String())
 	return nil, errors.New("something bad happened")
 }
