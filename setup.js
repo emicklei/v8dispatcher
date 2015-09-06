@@ -84,13 +84,21 @@ function_registry.take = function(ref) {
 // console is used for getting log entries in a logger on the Go side.
 //
 console = {};
-console.print = function(args) {
+console.print = function() {
     var msg = "";
     for (var i = 0; i < arguments.length; i++) {
         msg += arguments[i] + " (" + typeof(arguments[i]) + ") ";
     }
     $print(msg)
 }
-console.log = function(args) {
-    go_dispatch(function_registry.none, "console", "log", args);
+// log takes a variable number of arguments
+//
+console.log = function() {
+	var args = [];
+	// flatten all arguments for go_dispatch call
+	args.push(function_registry.none, "console", "log");
+	for (var i = 0; i < arguments.length; i++) {
+       args.push(arguments[i]);
+    }
+    go_dispatch.apply(this,args)
 }

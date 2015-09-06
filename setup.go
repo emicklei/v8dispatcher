@@ -8,8 +8,7 @@ package v8dispatcher
  */
 
 // copy content from setup.js. DO NOT EDIT HERE.
-var setup = `
-/*
+var setup = `/*
  * This file is subject to the terms and conditions defined in
  * file 'LICENSE.txt', which is part of this source code package.
  *
@@ -102,7 +101,12 @@ console.print = function(args) {
     }
     $print(msg)
 }
-console.log = function(args) {
-    go_dispatch(function_registry.none, "console", "log", args);
+console.log2 = function() {
+    go_dispatch(function_registry.none, "console", "log", arguments);
+}
+console.log = function() {
+	var args = [];
+	args.push(function_registry.none, "console", "log");	
+    Object["go_dispatch"].apply(args.slice.call(arguments));
 }
 `
