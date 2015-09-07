@@ -1,5 +1,47 @@
 package v8dispatcher
 
+import "testing"
+
+func TestCallGoFromJSNoArgsNoReturn(t *testing.T) {
+	worker, dist := newWorkerAndDispatcher(t)
+	rec := new(recorder)
+	dist.Register("recorder", rec)
+	if err := worker.Load("console.js", `
+		go_dispatch(function_registry.none,"recorder","noargs");
+	`); err != nil {
+		t.Fatal(err)
+	}
+	if rec.msg == nil {
+		t.Fatal("message not captured")
+	}
+	if got, want := rec.msg.Method, "noargs"; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
+func TestCallGoFromJSOneArgsNoReturn(t *testing.T) {
+	worker, dist := newWorkerAndDispatcher(t)
+	rec := new(recorder)
+	dist.Register("recorder", rec)
+	if err := worker.Load("console.js", `
+		go_dispatch(function_registry.none,"recorder","onearg",42);
+	`); err != nil {
+		t.Fatal(err)
+	}
+	if rec.msg == nil {
+		t.Fatal("message not captured")
+	}
+	if got, want := rec.msg.Method, "onearg"; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+	if got, want := len(rec.msg.Arguments), 1; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+	if got, want := rec.msg.Arguments[0], float64(42); got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
 //func TestConsole(t *testing.T) {
 //	worker, dist := newWorkerAndDispatcher(t)
 //	dist.Register("console", Console{})
