@@ -63,6 +63,16 @@ func (d *MessageDispatcher) Register(receiver string, p Performer) {
 	d.performers[receiver] = p
 }
 
+// Call creates a MessageSend and dispatches it to Javascript in the worker
+func (d *MessageDispatcher) Call(receiver string, method string, arguments ...interface{}) {
+	call := MessageSend{
+		Receiver:  receiver,
+		Method:    method,
+		Arguments: arguments,
+	}
+	d.send(call)
+}
+
 // Dispatch is a v8worker handler.
 func (d *MessageDispatcher) Dispatch(msg string) {
 	var ms MessageSend
@@ -100,12 +110,16 @@ func (d *MessageDispatcher) Dispatch(msg string) {
 			Arguments: []interface{}{ms.Callback, result}, // first argument of callback_dispatch is the functionRef
 		}
 	}
-	callbackJSON, err := callback.JSON()
+	d.send(callback)
+}
+
+func (d *MessageDispatcher) send(ms MessageSend) {
+	callbackJSON, err := ms.JSON()
 	if err != nil {
-		d.logger.Error("callback encode failure", "receiver", callback.Receiver, "method", callback.Method, "err", err)
+		d.logger.Error("message encode failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
 		return
 	}
 	if err := d.worker.Send(callbackJSON); err != nil {
-		d.logger.Error("work send failure", "receiver", callback.Receiver, "method", callback.Method, "err", err)
+		d.logger.Error("work send failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
 	}
 }

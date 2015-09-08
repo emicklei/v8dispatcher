@@ -34,3 +34,12 @@ func (r *recorder) Perform(msg MessageSend) (interface{}, error) {
 	r.msg = &msg
 	return nil, nil
 }
+
+type capturingConsole struct {
+	msg *MessageSend
+}
+
+func (c *capturingConsole) Perform(msg MessageSend) (interface{}, error) {
+	c.msg = &msg
+	return nil, nil
+}

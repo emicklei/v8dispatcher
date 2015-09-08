@@ -25,12 +25,3 @@ func TestConsole(t *testing.T) {
 		t.Errorf("got %v want %v", got, want)
 	}
 }
-
-type capturingConsole struct {
-	msg *MessageSend
-}
-
-func (c *capturingConsole) Perform(msg MessageSend) (interface{}, error) {
-	c.msg = &msg
-	return nil, nil
-}
