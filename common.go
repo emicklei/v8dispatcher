@@ -113,13 +113,14 @@ func (d *MessageDispatcher) Dispatch(msg string) {
 	d.send(callback)
 }
 
-func (d *MessageDispatcher) send(ms MessageSend) {
+func (d *MessageDispatcher) send(ms MessageSend) error {
 	callbackJSON, err := ms.JSON()
 	if err != nil {
 		d.logger.Error("message encode failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
-		return
+		return err
 	}
 	if err := d.worker.Send(callbackJSON); err != nil {
 		d.logger.Error("work send failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
 	}
+	return err
 }
