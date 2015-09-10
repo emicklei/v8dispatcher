@@ -35,11 +35,17 @@ func (r *recorder) Perform(msg MessageSend) (interface{}, error) {
 	return nil, nil
 }
 
-type capturingConsole struct {
-	msg *MessageSend
-}
-
-func (c *capturingConsole) Perform(msg MessageSend) (interface{}, error) {
-	c.msg = &msg
-	return nil, nil
+func expectConsoleLogArgument(t *testing.T, rec *recorder, arg interface{}) {
+	if rec.msg == nil {
+		t.Fatal("message not recorded")
+	}
+	if got, want := rec.msg.Method, "log"; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+	if got, want := len(rec.msg.Arguments), 1; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+	if got, want := rec.msg.Arguments[0], arg; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
 }

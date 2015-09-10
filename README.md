@@ -5,3 +5,4 @@ v8worker add-on for
 - console logging
 - javascript message dispatch
 - Go message dispatch
+- function scheduler (call later)

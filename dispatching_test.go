@@ -54,16 +54,5 @@ func TestCallJavascriptFromGoNoReturn(t *testing.T) {
 		t.Fatal(err)
 	}
 	dist.Call("this", "calledFromGo", "hello")
-	if rec.msg == nil {
-		t.Fatal("message not captured")
-	}
-	if got, want := rec.msg.Method, "log"; got != want {
-		t.Errorf("got %v want %v", got, want)
-	}
-	if got, want := len(rec.msg.Arguments), 1; got != want {
-		t.Errorf("got %v want %v", got, want)
-	}
-	if got, want := rec.msg.Arguments[0], "hello"; got != want {
-		t.Errorf("got %v want %v", got, want)
-	}
+	expectConsoleLogArgument(t, rec, "hello")
 }

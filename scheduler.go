@@ -31,11 +31,11 @@ func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 	if "schedule" == msg.Method {
 		if len(msg.Arguments) != 2 {
-			return nil, errors.New("expected `then` and `when` arguments")
+			return nil, errors.New("expected `after` and `then` arguments")
 		}
 		when, ok := msg.Arguments[0].(float64)
 		if !ok {
-			return nil, errors.New("first argument `when` must be delay in milliseconds (number)")
+			return nil, errors.New("first argument `after` must be delay in milliseconds (number)")
 		}
 		then, ok := msg.Arguments[1].(string)
 		if !ok {
