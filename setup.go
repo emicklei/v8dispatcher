@@ -8,7 +8,8 @@ package v8dispatcher
  */
 
 // copy content from setup.js. DO NOT EDIT HERE.
-var setup = `/*
+var setup = `
+/*
  * This file is subject to the terms and conditions defined in
  * file 'LICENSE.txt', which is part of this source code package.
  *
@@ -47,20 +48,22 @@ function callback_dispatch(functionRef /*, args */ ) {
 	}
 	callback.apply(this,args)
 }
-
 // go_dispatch is used in Javascript to call a Go function.
-// the worker callback in Go will dispatch a MessageSend (unmarshalled from the JSON message).
+// if the Go function returns a non-nil value then the onReturn is called
 //
-function go_dispatch(callbackOrNull, receiver, methodName /* args */ ) {
-    var obj = {
-		"callback": callbackOrNull,
-        "receiver": receiver,
-        "method": methodName
+function go_dispatch(onReturn, receiver, methodName /* args */ ) {
+    var obj = {		
+		"receiver": receiver,
+		"method": methodName,
+		"callback": onReturn,
+		"stack": new Error().stack
     };
     obj["args"] = [].slice.call(arguments).splice(3);
     $send(JSON.stringify(obj));
 }
 
+
+// uuid returns a v4 UUID
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

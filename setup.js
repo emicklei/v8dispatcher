@@ -41,11 +41,6 @@ function callback_dispatch(functionRef /*, args */ ) {
 // if the Go function returns a non-nil value then the onReturn is called
 //
 function go_dispatch(onReturn, receiver, methodName /* args */ ) {
-//	var iferror = function(reason) {	
-//		var lines = stk.split("\n");
-//		$print("js: "+reason);					
-//		$print(lines);
-//	}
     var obj = {		
 		"receiver": receiver,
 		"method": methodName,
@@ -57,6 +52,7 @@ function go_dispatch(onReturn, receiver, methodName /* args */ ) {
 }
 
 
+// uuid returns a v4 UUID
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
