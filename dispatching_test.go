@@ -1,11 +1,14 @@
 package v8dispatcher
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestCallGoFromJSNoArgsNoReturn(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
-	rec := new(recorder)
-	dist.Register("recorder", rec)
+	rec := &recorder{moduleName: "recorder"}
+	dist.Register(rec)
 	if err := worker.Load("TestCallGoFromJSNoArgsNoReturn.js", `
 		go_dispatch(function_registry.none,"recorder","noargs");
 	`); err != nil {
@@ -21,8 +24,8 @@ func TestCallGoFromJSNoArgsNoReturn(t *testing.T) {
 
 func TestCallGoFromJSOneArgsNoReturn(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
-	rec := new(recorder)
-	dist.Register("recorder", rec)
+	rec := &recorder{moduleName: "recorder"}
+	dist.Register(rec)
 	if err := worker.Load("TestCallGoFromJSOneArgsNoReturn.js", `
 		go_dispatch(function_registry.none,"recorder","onearg",42);
 	`); err != nil {
@@ -44,8 +47,8 @@ func TestCallGoFromJSOneArgsNoReturn(t *testing.T) {
 
 func TestCallJavascriptFromGoNoReturn(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
-	rec := new(recorder)
-	dist.Register("console", rec)
+	rec := &recorder{moduleName: "console"}
+	dist.Register(rec)
 	if err := worker.Load("TestCallJavascriptFromGoNoReturn.js", `
 		function calledFromGo(what) {
 			console.log(what);
@@ -55,4 +58,37 @@ func TestCallJavascriptFromGoNoReturn(t *testing.T) {
 	}
 	dist.Call("this", "calledFromGo", "hello")
 	expectConsoleLogArgument(t, rec, "hello")
+}
+
+type someApi struct{}
+
+func (s someApi) ModuleDefinition() (string, string) {
+	return "someApi", `
+		someApi = {};
+		someApi.doit = function(what) {
+			go_dispatch(
+				function_registry.none,
+				"someApi",
+				"error",
+				what);
+		};
+	`
+}
+
+func (s someApi) Perform(msg MessageSend) (interface{}, error) {
+	if msg.Method == "error" {
+		fmt.Printf("go: error was performed with %v\n", msg.Arguments[0])
+		return nil, fmt.Errorf("error was performed with %v", msg.Arguments[0])
+	}
+	return nil, nil
+}
+
+func TestCallGoInError(t *testing.T) {
+	worker, dist := newWorkerAndDispatcher(t)
+	dist.Register(someApi{})
+	if err := worker.Load("TestCallGoInError.js", `
+		someApi.doit(42)
+	`); err != nil {
+		t.Fatal(err)
+	}
 }

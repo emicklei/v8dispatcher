@@ -28,6 +28,15 @@ func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 	}
 }
 
+func (s *FunctionScheduler) ModuleDefinition() (string, string) {
+	return "go_scheduler", `
+		go_scheduler = {};
+		go_scheduler.schedule = function(when,then) {
+			go_dispatch(function_registry.none, "go_scheduler", "schedule", when, function_registry.put(then));
+		}
+	`
+}
+
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 	if "schedule" == msg.Method {
 		if len(msg.Arguments) != 2 {
@@ -46,9 +55,9 @@ func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 			Method:    "callback_dispatch",
 			Arguments: []interface{}{then},
 		}
-		s.Schedule(int64(when), scheduledMsg)
+		return nil, s.Schedule(int64(when), scheduledMsg)
 	}
-	return nil, nil
+	return nil, ErrNoSuchMethod
 }
 
 // Reset forgets about all scheduled calls.

@@ -4,8 +4,8 @@ import "testing"
 
 func TestConsole(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
-	capture := new(recorder)
-	dist.Register("console", capture)
+	capture := &recorder{moduleName: "console"}
+	dist.Register(capture)
 	err := worker.Load("console.js", `
 		console.log("size",42);
 	`)

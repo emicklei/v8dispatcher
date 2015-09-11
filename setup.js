@@ -37,23 +37,25 @@ function callback_dispatch(functionRef /*, args */ ) {
 	}
 	callback.apply(this,args)
 }
-
-function go_error_on_perform(reason) {
-	throw reason;
-}
-
 // go_dispatch is used in Javascript to call a Go function.
-// the worker callback in Go will dispatch a MessageSend (unmarshalled from the JSON message).
+// if the Go function returns a non-nil value then the onReturn is called
 //
-function go_dispatch(callbackOrNull, receiver, methodName /* args */ ) {
-    var obj = {
-		"callback": callbackOrNull,
-        "receiver": receiver,
-        "method": methodName
+function go_dispatch(onReturn, receiver, methodName /* args */ ) {
+//	var iferror = function(reason) {	
+//		var lines = stk.split("\n");
+//		$print("js: "+reason);					
+//		$print(lines);
+//	}
+    var obj = {		
+		"receiver": receiver,
+		"method": methodName,
+		"callback": onReturn,
+		"stack": new Error().stack
     };
     obj["args"] = [].slice.call(arguments).splice(3);
     $send(JSON.stringify(obj));
 }
+
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {

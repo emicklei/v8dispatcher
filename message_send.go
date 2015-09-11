@@ -12,10 +12,12 @@ type MessageSend struct {
 	Method    string        `json:"method" `
 	Arguments []interface{} `json:"args" `
 	Callback  string        `json:"callback" `
+	OnError   string        `json:"onError" `
+	Stack     string        `json:"stack" `
 }
 
 func (m MessageSend) String() string {
-	return fmt.Sprintf("%s.%s(%v) => %s", m.Receiver, m.Method, m.Arguments, m.Callback)
+	return fmt.Sprintf("%s.%s(%v) => (%s, %s)", m.Receiver, m.Method, m.Arguments, m.Callback, m.OnError)
 }
 
 func (m MessageSend) JSON() (string, error) {

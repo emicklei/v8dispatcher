@@ -48,10 +48,6 @@ function callback_dispatch(functionRef /*, args */ ) {
 	callback.apply(this,args)
 }
 
-function go_error_on_perform(reason) {
-	throw reason;
-}
-
 // go_dispatch is used in Javascript to call a Go function.
 // the worker callback in Go will dispatch a MessageSend (unmarshalled from the JSON message).
 //
@@ -94,19 +90,22 @@ function_registry.take = function(ref) {
 // console is used for getting log entries in a logger on the Go side.
 //
 console = {};
-console.print = function(args) {
+console.print = function() {
     var msg = "";
     for (var i = 0; i < arguments.length; i++) {
         msg += arguments[i] + " (" + typeof(arguments[i]) + ") ";
     }
     $print(msg)
 }
-console.log2 = function() {
-    go_dispatch(function_registry.none, "console", "log", arguments);
-}
+// log takes a variable number of arguments
+//
 console.log = function() {
 	var args = [];
-	args.push(function_registry.none, "console", "log");	
-    Object["go_dispatch"].apply(args.slice.call(arguments));
+	// flatten all arguments for go_dispatch call
+	args.push(function_registry.none, "console", "log");
+	for (var i = 0; i < arguments.length; i++) {
+       args.push(arguments[i]);
+    }
+    go_dispatch.apply(this,args)
 }
 `

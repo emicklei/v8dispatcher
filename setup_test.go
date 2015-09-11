@@ -27,7 +27,13 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 }
 
 type recorder struct {
-	msg *MessageSend
+	moduleName string
+	source     string
+	msg        *MessageSend
+}
+
+func (r recorder) ModuleDefinition() (string, string) {
+	return r.moduleName, r.source
 }
 
 func (r *recorder) Perform(msg MessageSend) (interface{}, error) {
