@@ -60,6 +60,10 @@ func (s *FunctionScheduler) Perform(msg AsyncMessage) (interface{}, error) {
 	return nil, ErrNoSuchMethod
 }
 
+func (s *FunctionScheduler) Request(msg MessageSend) (interface{}, error) {
+	return nil, ErrNoSuchMethod
+}
+
 // Reset forgets about all scheduled calls.
 func (s *FunctionScheduler) Reset() {
 	s.protection.Lock()

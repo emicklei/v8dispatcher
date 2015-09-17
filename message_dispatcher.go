@@ -21,22 +21,26 @@ type Module interface {
 	ModuleDefinition() (string, string)
 
 	// Perform will call the function associated to the Method of the message.
-	// It returns a value (optionally) and an error if the call failed.
+	// It returns a value (optionally) and an error if it failed.
 	Perform(msg AsyncMessage) (interface{}, error)
+
+	// Request will call the function associated to the Method of the message.
+	// It always returns a value or an error if it failed.
+	Request(msg MessageSend) (interface{}, error)
 }
 
 // MessageDispatcher is responsible for handling messages send from Javascript.
 // It will do a receiver lookup and perform the messages by the receiver.
 type MessageDispatcher struct {
-	logger     log15.Logger
-	performers map[string]Module
-	worker     *v8worker.Worker
+	logger          log15.Logger
+	messageHandlers map[string]Module
+	worker          *v8worker.Worker
 }
 
 func NewMessageDispatcher(aLogger log15.Logger) *MessageDispatcher {
 	return &MessageDispatcher{
-		logger:     aLogger,
-		performers: map[string]Module{},
+		logger:          aLogger,
+		messageHandlers: map[string]Module{},
 	}
 }
 
@@ -55,7 +59,7 @@ func (d *MessageDispatcher) Register(p Module) error {
 			return err
 		}
 	}
-	d.performers[name] = p
+	d.messageHandlers[name] = p
 	return nil
 }
 
@@ -80,7 +84,7 @@ func (d *MessageDispatcher) DispatchSend(jsonFromJS string) {
 		d.logger.Error("not a valid MessageSend", "err", err)
 		return
 	}
-	performer, ok := d.performers[msg.Receiver]
+	performer, ok := d.messageHandlers[msg.Receiver]
 	if !ok {
 		d.logger.Error("unknown receiver", "receiver", msg.Receiver)
 		return

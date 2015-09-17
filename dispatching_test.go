@@ -3,6 +3,7 @@ package v8dispatcher
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestCallGoFromJSNoArgsNoReturn(t *testing.T) {
@@ -72,6 +73,12 @@ func (s someApi) ModuleDefinition() (string, string) {
 				"error",
 				what);
 		};
+		someApi.now = function() {
+			return $request(JSON.stringify({
+				"receiver":"someApi",
+				"method":"now"
+			}));
+		};		
 	`
 }
 
@@ -80,7 +87,14 @@ func (s someApi) Perform(msg AsyncMessage) (interface{}, error) {
 		fmt.Printf("go: error was performed with %v\n", msg.Arguments[0])
 		return nil, fmt.Errorf("error was performed with %v", msg.Arguments[0])
 	}
-	return nil, nil
+	return nil, ErrNoSuchMethod
+}
+
+func (s someApi) Request(msg MessageSend) (interface{}, error) {
+	if msg.Method == "now" {
+		return time.Now(), nil
+	}
+	return nil, ErrNoSuchMethod
 }
 
 func TestCallGoInError(t *testing.T) {
@@ -91,4 +105,18 @@ func TestCallGoInError(t *testing.T) {
 	`); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestRequestNow(t *testing.T) {
+	t.Skip()
+	worker, dist := newWorkerAndDispatcher(t)
+	rec := &recorder{moduleName: "console"}
+	dist.Register(rec)
+	dist.Register(someApi{})
+	if err := worker.Load("TestRequestNow.js", `
+		console.log(someApi.now())
+	`); err != nil {
+		t.Fatal(err)
+	}
+	expectConsoleLogArgument(t, rec, "hello")
 }

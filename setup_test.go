@@ -30,6 +30,7 @@ type recorder struct {
 	moduleName string
 	source     string
 	msg        *AsyncMessage
+	msgs       *MessageSend
 }
 
 func (r recorder) ModuleDefinition() (string, string) {
@@ -38,6 +39,11 @@ func (r recorder) ModuleDefinition() (string, string) {
 
 func (r *recorder) Perform(msg AsyncMessage) (interface{}, error) {
 	r.msg = &msg
+	return nil, nil
+}
+
+func (r *recorder) Request(msg MessageSend) (interface{}, error) {
+	r.msgs = &msg
 	return nil, nil
 }
 
