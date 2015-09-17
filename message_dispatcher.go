@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/ry/v8worker"
+	"github.com/emicklei/v8worker"
 	"gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -22,7 +22,7 @@ type Module interface {
 
 	// Perform will call the function associated to the Method of the message.
 	// It returns a value (optionally) and an error if the call failed.
-	Perform(msg MessageSend) (interface{}, error)
+	Perform(msg AsyncMessage) (interface{}, error)
 }
 
 // MessageDispatcher is responsible for handling messages send from Javascript.
@@ -68,9 +68,14 @@ func (d *MessageDispatcher) Call(receiver string, method string, arguments ...in
 	})
 }
 
-// Dispatch is a v8worker handler.
-func (d *MessageDispatcher) Dispatch(jsonFromJS string) {
-	var msg MessageSend
+// DispatchRequest is a v8worker exchange handler.
+func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
+	return "42"
+}
+
+// DispatchSend is a v8worker callback handler.
+func (d *MessageDispatcher) DispatchSend(jsonFromJS string) {
+	var msg AsyncMessage
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
 		d.logger.Error("not a valid MessageSend", "err", err)
 		return

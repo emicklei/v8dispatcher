@@ -75,7 +75,7 @@ func (s someApi) ModuleDefinition() (string, string) {
 	`
 }
 
-func (s someApi) Perform(msg MessageSend) (interface{}, error) {
+func (s someApi) Perform(msg AsyncMessage) (interface{}, error) {
 	if msg.Method == "error" {
 		fmt.Printf("go: error was performed with %v\n", msg.Arguments[0])
 		return nil, fmt.Errorf("error was performed with %v", msg.Arguments[0])
