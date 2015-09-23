@@ -87,6 +87,9 @@ func (s someApi) Perform(msg AsyncMessage) (interface{}, error) {
 		fmt.Printf("go: error was performed with %v\n", msg.Arguments[0])
 		return nil, fmt.Errorf("error was performed with %v", msg.Arguments[0])
 	}
+	if msg.Method == "now" {
+		return time.Now(), nil
+	}
 	return nil, ErrNoSuchMethod
 }
 
@@ -108,7 +111,7 @@ func TestCallGoInError(t *testing.T) {
 }
 
 func TestRequestNow(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	worker, dist := newWorkerAndDispatcher(t)
 	rec := &recorder{moduleName: "console"}
 	dist.Register(rec)
@@ -118,5 +121,7 @@ func TestRequestNow(t *testing.T) {
 	`); err != nil {
 		t.Fatal(err)
 	}
-	expectConsoleLogArgument(t, rec, "hello")
+	if len(rec.msg.Arguments[0].(string)) == 0 {
+		t.Fail()
+	}
 }

@@ -74,7 +74,27 @@ func (d *MessageDispatcher) Call(receiver string, method string, arguments ...in
 
 // DispatchRequest is a v8worker exchange handler.
 func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
-	return "42"
+	var msg MessageSend
+	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
+		d.logger.Error("not a valid MessageSend", "err", err)
+		return err.Error() // TODO
+	}
+	performer, ok := d.messageHandlers[msg.Receiver]
+	if !ok {
+		d.logger.Error("unknown receiver", "receiver", msg.Receiver)
+		return "" // TODO
+	}
+	result, err := performer.Request(msg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return err.Error() // TODO
+	}
+	data, err := json.Marshal(result)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return err.Error() // TODO
+	}
+	return string(data)
 }
 
 // DispatchSend is a v8worker callback handler.
