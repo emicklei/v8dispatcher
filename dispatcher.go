@@ -13,22 +13,6 @@ var (
 	ErrNoSuchMethod = errors.New("no such method")
 )
 
-// Module represents a Javascript object with functions that call into its Go counterpart.
-type Module interface {
-	// ModuleDefinition returns the name of the module as it will be known in Javascript
-	// and Javascript source to create this module (global variable).
-	// It returns an error if loading the source failed.
-	ModuleDefinition() (string, string)
-
-	// Perform will call the function associated to the Method of the message.
-	// It returns a value (optionally) and an error if it failed.
-	Perform(msg AsyncMessage) (interface{}, error)
-
-	// Request will call the function associated to the Method of the message.
-	// It always returns a value or an error if it failed.
-	Request(msg MessageSend) (interface{}, error)
-}
-
 // MessageDispatcher is responsible for handling messages send from Javascript.
 // It will do a receiver lookup and perform the messages by the receiver.
 type MessageDispatcher struct {
@@ -67,7 +51,7 @@ func (d *MessageDispatcher) Register(p Module) error {
 func (d *MessageDispatcher) Call(receiver string, method string, arguments ...interface{}) {
 	d.send(MessageSend{
 		Receiver:  receiver,
-		Method:    method,
+		Selector:  method,
 		Arguments: arguments,
 	})
 }
@@ -79,12 +63,17 @@ func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
 		d.logger.Error("not a valid MessageSend", "err", err)
 		return err.Error() // TODO
 	}
+	msg.IsAsynchronous = false
+	return d.dispatch(msg)
+}
+
+func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 	performer, ok := d.messageHandlers[msg.Receiver]
 	if !ok {
 		d.logger.Error("unknown receiver", "receiver", msg.Receiver)
 		return "" // TODO
 	}
-	result, err := performer.Request(msg)
+	result, err := performer.Perform(msg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return err.Error() // TODO
@@ -99,52 +88,22 @@ func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
 
 // DispatchSend is a v8worker callback handler.
 func (d *MessageDispatcher) DispatchSend(jsonFromJS string) {
-	var msg AsyncMessage
+	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
 		d.logger.Error("not a valid MessageSend", "err", err)
 		return
 	}
-	performer, ok := d.messageHandlers[msg.Receiver]
-	if !ok {
-		d.logger.Error("unknown receiver", "receiver", msg.Receiver)
-		return
-	}
-	result, err := performer.Perform(msg)
-	var callback MessageSend
-	if err != nil {
-		d.logger.Error(err.Error())
-		for ix, each := range strings.Split(msg.Stack, "\n") {
-			if ix != 1 {
-				d.logger.Error(each)
-			}
-		}
-		return
-	} else {
-		// check onReturn
-		if len(msg.Callback) == 0 {
-			if result != nil {
-				d.logger.Error("perform returned result but no callback was given", "receiver",
-					msg.Receiver, "method", msg.Method, "result", result)
-				return
-			}
-			return
-		}
-		callback = MessageSend{
-			Receiver:  "this",
-			Method:    "callback_dispatch",
-			Arguments: []interface{}{msg.Callback, result}, // first argument of callback_dispatch is the functionRef
-		}
-	}
-	d.send(callback)
+	msg.IsAsynchronous = true
+	_ = d.dispatch(msg)
 }
 
 func (d *MessageDispatcher) send(ms MessageSend) {
 	callbackJSON, err := ms.JSON()
 	if err != nil {
-		d.logger.Error("message encode failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
+		d.logger.Error("message encode failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
 		return
 	}
 	if err := d.worker.Send(callbackJSON); err != nil {
-		d.logger.Error("work send failure", "receiver", ms.Receiver, "method", ms.Method, "err", err)
+		d.logger.Error("work send failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
 	}
 }

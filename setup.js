@@ -57,50 +57,5 @@ function go_dispatch(onReturn, receiver, methodName /* args */ ) {
 }
 
 
-// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-function uuid() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-   		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-   		return v.toString(16);
-	});
-}
-	
-// function_registry keeps identifyable (by generated id) functions
-//
-function_registry = {};
-function_registry.none = undefined;
-function_registry.put = function(func){
-	var ref = uuid();
-	function_registry[ref] = func;
-	return ref;
-}
 
-// take returns the function by its reference and removes it from the registry.
-//
-function_registry.take = function(ref) {
-	var func = function_registry[ref];
-	function_registry[ref] = undefined;
-	return func;
-}
 
-// console is used for getting log entries in a logger on the Go side.
-//
-console = {};
-console.print = function() {
-    var msg = "";
-    for (var i = 0; i < arguments.length; i++) {
-        msg += arguments[i] + " (" + typeof(arguments[i]) + ") ";
-    }
-    $print(msg)
-}
-// log takes a variable number of arguments
-//
-console.log = function() {
-	var args = [];
-	// flatten all arguments for go_dispatch call
-	args.push(function_registry.none, "console", "log");
-	for (var i = 0; i < arguments.length; i++) {
-       args.push(arguments[i]);
-    }
-    go_dispatch.apply(this,args)
-}

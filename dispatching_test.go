@@ -18,7 +18,7 @@ func TestCallGoFromJSNoArgsNoReturn(t *testing.T) {
 	if rec.msg == nil {
 		t.Fatal("message not captured")
 	}
-	if got, want := rec.msg.Method, "noargs"; got != want {
+	if got, want := rec.msg.Selector, "noargs"; got != want {
 		t.Errorf("got %v want %v", got, want)
 	}
 }
@@ -35,7 +35,7 @@ func TestCallGoFromJSOneArgsNoReturn(t *testing.T) {
 	if rec.msg == nil {
 		t.Fatal("message not captured")
 	}
-	if got, want := rec.msg.Method, "onearg"; got != want {
+	if got, want := rec.msg.Selector, "onearg"; got != want {
 		t.Errorf("got %v want %v", got, want)
 	}
 	if got, want := len(rec.msg.Arguments), 1; got != want {
@@ -82,19 +82,12 @@ func (s someApi) ModuleDefinition() (string, string) {
 	`
 }
 
-func (s someApi) Perform(msg AsyncMessage) (interface{}, error) {
-	if msg.Method == "error" {
+func (s someApi) Perform(msg MessageSend) (interface{}, error) {
+	if msg.Selector == "error" {
 		fmt.Printf("go: error was performed with %v\n", msg.Arguments[0])
 		return nil, fmt.Errorf("error was performed with %v", msg.Arguments[0])
 	}
-	if msg.Method == "now" {
-		return time.Now(), nil
-	}
-	return nil, ErrNoSuchMethod
-}
-
-func (s someApi) Request(msg MessageSend) (interface{}, error) {
-	if msg.Method == "now" {
+	if msg.Selector == "now" {
 		return time.Now(), nil
 	}
 	return nil, ErrNoSuchMethod

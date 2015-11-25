@@ -37,8 +37,8 @@ func (s *FunctionScheduler) ModuleDefinition() (string, string) {
 	`
 }
 
-func (s *FunctionScheduler) Perform(msg AsyncMessage) (interface{}, error) {
-	if "schedule" == msg.Method {
+func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
+	if "schedule" == msg.Selector {
 		if len(msg.Arguments) != 2 {
 			return nil, errors.New("expected `after` and `then` arguments")
 		}
@@ -52,15 +52,11 @@ func (s *FunctionScheduler) Perform(msg AsyncMessage) (interface{}, error) {
 		}
 		scheduledMsg := MessageSend{
 			Receiver:  "this",
-			Method:    "callback_dispatch",
+			Selector:  "callback_dispatch",
 			Arguments: []interface{}{then},
 		}
 		return nil, s.Schedule(int64(when), scheduledMsg)
 	}
-	return nil, ErrNoSuchMethod
-}
-
-func (s *FunctionScheduler) Request(msg MessageSend) (interface{}, error) {
 	return nil, ErrNoSuchMethod
 }
 

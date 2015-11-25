@@ -2,6 +2,7 @@ package v8dispatcher
 
 import "testing"
 
+// clear && go test -v -test.run=TestConsole
 func TestConsole(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
 	capture := &recorder{moduleName: "console"}
@@ -15,7 +16,7 @@ func TestConsole(t *testing.T) {
 	if capture.msg == nil {
 		t.Fatal("message not captured")
 	}
-	if got, want := capture.msg.Method, "log"; got != want {
+	if got, want := capture.msg.Selector, "log"; got != want {
 		t.Errorf("got %v want %v", got, want)
 	}
 	if got, want := capture.msg.Arguments[0], "size"; got != want {

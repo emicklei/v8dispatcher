@@ -13,15 +13,17 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 	dist := NewMessageDispatcher(log15.New())
 	worker := v8worker.New(dist.DispatchSend, dist.DispatchRequest)
 	dist.Worker(worker)
-	//t.Log("reading setup.js")
-	src, err := ioutil.ReadFile("setup.js")
-	if err != nil {
-		t.Fatal(err)
-	}
-	//t.Log("loading setup.js")
-	err = worker.Load("setup.js", string(src))
-	if err != nil {
-		t.Fatal(err)
+	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
+		t.Log("reading " + each)
+		src, err := ioutil.ReadFile(each)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log("loading " + each)
+		err = worker.Load(each, string(src))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	return worker, dist
 }
@@ -29,21 +31,15 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 type recorder struct {
 	moduleName string
 	source     string
-	msg        *AsyncMessage
-	msgs       *MessageSend
+	msg        *MessageSend
 }
 
 func (r recorder) ModuleDefinition() (string, string) {
 	return r.moduleName, r.source
 }
 
-func (r *recorder) Perform(msg AsyncMessage) (interface{}, error) {
+func (r *recorder) Perform(msg MessageSend) (interface{}, error) {
 	r.msg = &msg
-	return nil, nil
-}
-
-func (r *recorder) Request(msg MessageSend) (interface{}, error) {
-	r.msgs = &msg
 	return nil, nil
 }
 
@@ -51,7 +47,7 @@ func expectConsoleLogArgument(t *testing.T, rec *recorder, arg interface{}) {
 	if rec.msg == nil {
 		t.Fatal("message not recorded")
 	}
-	if got, want := rec.msg.Method, "log"; got != want {
+	if got, want := rec.msg.Selector, "log"; got != want {
 		t.Errorf("got %v want %v", got, want)
 	}
 	if got, want := len(rec.msg.Arguments), 1; got != want {
