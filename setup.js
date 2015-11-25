@@ -14,17 +14,22 @@ $recv(function(msg) {
     this[obj.selector].apply(this, obj.args)
 });
 
-// javascript_dispatch is used to directly call a Javascript function by its name.
-// 
-function javascript_dispatch(functionName, context /*, args */ ) {
-    var args = [].slice.call(arguments).splice(2);
-    var namespaces = functionName.split(".");
+// This callback is set for handling function calls in JSON from Go.
+// It is called from Go using "worker.Request(...)".
+// Throws a SyntaxError exception if the string to parse is not valid JSON.
+// Return the JSON representation of the return value of the handling function.
+//
+$request_handler(function(msg) {
+    var obj = JSON.parse(msg);	
+    var namespaces = obj.selector.split(".");
     var func = namespaces.pop();
     for (var i = 0; i < namespaces.length; i++) {
         context = context[namespaces[i]];
     }
-    return context[func].apply(this, args);
-}
+	// TODO handle exception
+    var returnValue = context[func].apply(this, args);
+	return JSON.stringify(returnValue)
+});
 
 // callback_dispatch is used from Go to call a callback function that was registered.
 //
