@@ -30,34 +30,37 @@ func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 
 func (s *FunctionScheduler) ModuleDefinition() (string, string) {
 	return "go_scheduler", `
-		go_scheduler = {};
-		go_scheduler.schedule = function(when,then) {
-			go_dispatch(function_registry.none, "go_scheduler", "schedule", when, function_registry.put(then));
+		V8D.schedule = function(after,then) {
+			$send(JSON.stringify({
+				"receiver" : "go_scheduler",
+				"selector" : "schedule",
+				"args"     : [ after, V8D.function_registry.put(then) ]
+			}));
 		}
 	`
 }
 
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
-	if "schedule" == msg.Selector {
-		if len(msg.Arguments) != 2 {
-			return nil, errors.New("expected `after` and `then` arguments")
-		}
-		when, ok := msg.Arguments[0].(float64)
-		if !ok {
-			return nil, errors.New("first argument `after` must be delay in milliseconds (number)")
-		}
-		then, ok := msg.Arguments[1].(string)
-		if !ok {
-			return nil, errors.New("second argument `then` must be a function reference (string)")
-		}
-		scheduledMsg := MessageSend{
-			Receiver:  "this",
-			Selector:  "callback_dispatch",
-			Arguments: []interface{}{then},
-		}
-		return nil, s.Schedule(int64(when), scheduledMsg)
+	if "schedule" != msg.Selector {
+		return nil, ErrNoSuchMethod
 	}
-	return nil, ErrNoSuchMethod
+	if len(msg.Arguments) != 2 {
+		return nil, errors.New("expected `after` and `then` arguments")
+	}
+	when, ok := msg.Arguments[0].(float64)
+	if !ok {
+		return nil, errors.New("first argument `after` must be delay in milliseconds (number)")
+	}
+	then, ok := msg.Arguments[1].(string)
+	if !ok {
+		return nil, errors.New("second argument `then` must be a function reference (string)")
+	}
+	scheduledMsg := MessageSend{
+		Receiver:  "this",
+		Selector:  "callback_dispatch",
+		Arguments: []interface{}{then},
+	}
+	return nil, s.Schedule(int64(when), scheduledMsg)
 }
 
 // Reset forgets about all scheduled calls.

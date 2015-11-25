@@ -14,12 +14,12 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 	worker := v8worker.New(dist.DispatchSend, dist.DispatchRequest)
 	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
-		t.Log("reading " + each)
+		//t.Log("reading " + each)
 		src, err := ioutil.ReadFile(each)
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Log("loading " + each)
+		//t.Log("loading " + each)
 		err = worker.Load(each, string(src))
 		if err != nil {
 			t.Fatal(err)

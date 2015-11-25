@@ -11,7 +11,7 @@
 //
 $recv(function(msg) {
     var obj = JSON.parse(msg);
-    this[obj.method].apply(this, obj.args)
+    this[obj.selector].apply(this, obj.args)
 });
 
 // javascript_dispatch is used to directly call a Javascript function by its name.
@@ -30,13 +30,15 @@ function javascript_dispatch(functionName, context /*, args */ ) {
 //
 function callback_dispatch(functionRef /*, args */ ) {
 	var args = [].slice.call(arguments).splice(1);
-	var callback = function_registry.take(functionRef)
-	if (function_registry.none == callback) {
+	var callback = V8D.function_registry.take(functionRef)
+	if (V8D.function_registry.none == callback) {
 		$print("no function for reference:"+functionRef);
 		return;
 	}
 	callback.apply(this,args)
 }
+
+
 // go_dispatch is used in Javascript to call a Go function.
 // if the Go function returns a non-nil value then the onReturn is called
 //
