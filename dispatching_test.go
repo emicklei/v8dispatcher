@@ -1,6 +1,7 @@
 package v8dispatcher
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -13,7 +14,7 @@ func (s someApi) ModuleDefinition() (string, string) {
 		someApi.now = function() {
 			return $request(JSON.stringify({
 				"receiver":"someApi",
-				"method":"now"
+				"selector":"now"
 			}));
 		};		
 	`
@@ -23,7 +24,7 @@ func (s someApi) Perform(msg MessageSend) (interface{}, error) {
 	if msg.Selector == "now" {
 		return time.Now(), nil
 	}
-	return nil, ErrNoSuchMethod
+	return nil, fmt.Errorf(ErrNoSuchMethod, "someApi", msg.Selector)
 }
 
 func TestRequestNow(t *testing.T) {
@@ -38,5 +39,25 @@ func TestRequestNow(t *testing.T) {
 	}
 	if len(rec.msg.Arguments[0].(string)) == 0 {
 		t.Fail()
+	}
+}
+
+func BenchmarkRequestFromGo(b *testing.B) {
+	worker, _ := benchNewWorkerAndDispatcher(b)
+	if err := worker.Load("BenchmarkRequestFromGo.js", `
+		function dummy(what) {
+			return what;
+		}
+	`); err != nil {
+		b.Fatal(err)
+	}
+	msg := MessageSend{
+		Receiver:  "this",
+		Selector:  "dummy",
+		Arguments: []interface{}{42},
+	}
+	js, _ := msg.JSON()
+	for n := 0; n < b.N; n++ {
+		worker.Request(js)
 	}
 }

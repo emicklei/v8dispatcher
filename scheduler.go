@@ -42,7 +42,7 @@ func (s *FunctionScheduler) ModuleDefinition() (string, string) {
 
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 	if "schedule" != msg.Selector {
-		return nil, ErrNoSuchMethod
+		return nil, fmt.Errorf(ErrNoSuchMethod, "go_scheduler", msg.Selector)
 	}
 	if len(msg.Arguments) != 2 {
 		return nil, errors.New("expected `after` and `then` arguments")

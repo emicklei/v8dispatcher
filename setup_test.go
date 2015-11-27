@@ -28,6 +28,25 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 	return worker, dist
 }
 
+func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
+	dist := NewMessageDispatcher(log15.New())
+	worker := v8worker.New(dist.DispatchSend, dist.DispatchRequest)
+	dist.Worker(worker)
+	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
+		//t.Log("reading " + each)
+		src, err := ioutil.ReadFile(each)
+		if err != nil {
+			b.Fatal(err)
+		}
+		//t.Log("loading " + each)
+		err = worker.Load(each, string(src))
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	return worker, dist
+}
+
 type recorder struct {
 	moduleName string
 	source     string

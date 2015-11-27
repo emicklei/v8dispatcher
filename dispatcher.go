@@ -2,7 +2,6 @@ package v8dispatcher
 
 import (
 	"encoding/json"
-	"errors"
 	"strings"
 
 	"github.com/emicklei/v8worker"
@@ -10,7 +9,7 @@ import (
 )
 
 var (
-	ErrNoSuchMethod = errors.New("no such method")
+	ErrNoSuchMethod = "%s does not understand %s"
 )
 
 // MessageDispatcher is responsible for handling messages send from Javascript.
@@ -56,7 +55,7 @@ func (d *MessageDispatcher) Call(receiver string, method string, arguments ...in
 	})
 }
 
-// DispatchRequest is a v8worker exchange handler.
+// DispatchRequest is a v8worker request handler.
 func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {

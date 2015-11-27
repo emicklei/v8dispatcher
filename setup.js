@@ -21,13 +21,15 @@ $recv(function(msg) {
 //
 $request_handler(function(msg) {
     var obj = JSON.parse(msg);	
-    var namespaces = obj.selector.split(".");
-    var func = namespaces.pop();
-    for (var i = 0; i < namespaces.length; i++) {
-        context = context[namespaces[i]];
-    }
+	var context = this;
+	if (obj.receiver != "this") {
+	    var namespaces = obj.receiver.split(".");
+    	for (var i = 1; i < namespaces.length; i++) {
+    	    context = context[namespaces[i]];
+    	}
+	}
 	// TODO handle exception
-    var returnValue = context[func].apply(this, args);
+    var returnValue = context[obj.selector].apply(this, obj.args);
 	return JSON.stringify(returnValue)
 });
 
