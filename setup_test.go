@@ -11,7 +11,7 @@ import (
 
 func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher(log15.New())
-	worker := v8worker.New(dist.DispatchSend, dist.DispatchRequest)
+	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
 	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
 		//t.Log("reading " + each)
@@ -30,7 +30,7 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 
 func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher(log15.New())
-	worker := v8worker.New(dist.DispatchSend, dist.DispatchRequest)
+	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
 	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
 		//t.Log("reading " + each)

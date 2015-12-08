@@ -19,7 +19,7 @@ $recv(function(msg) {
 // Throws a SyntaxError exception if the string to parse is not valid JSON.
 // Return the JSON representation of the return value of the handling function.
 //
-$request_handler(function(msg) {
+$recvSync(function(msg) {
     var obj = JSON.parse(msg);	
 	var context = this;
 	if (obj.receiver != "this") {

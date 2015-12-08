@@ -16,14 +16,14 @@ type scheduledCall struct {
 }
 
 type FunctionScheduler struct {
-	protection *sync.RWMutex
+	mutex      *sync.RWMutex
 	head, tail *scheduledCall
 	dispatcher *MessageDispatcher
 }
 
 func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 	return &FunctionScheduler{
-		protection: new(sync.RWMutex),
+		mutex:      new(sync.RWMutex),
 		dispatcher: dispatcher,
 	}
 }
@@ -65,8 +65,8 @@ func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 
 // Reset forgets about all scheduled calls.
 func (s *FunctionScheduler) Reset() {
-	s.protection.Lock()
-	defer s.protection.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.head = nil
 	s.tail = nil
 }
@@ -74,8 +74,8 @@ func (s *FunctionScheduler) Reset() {
 // PerformCallsBefore performs all calls scheduled before a certain point in time.
 // Each call is run in its own goroutine
 func (s *FunctionScheduler) PerformCallsBefore(when time.Time) {
-	s.protection.Lock()
-	defer s.protection.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	for s.head != nil && when.After(s.head.when) {
 		// first detach then perform to allow new call to be inserted
 		call := s.head
@@ -98,8 +98,8 @@ func (s *FunctionScheduler) Schedule(delayInMilliseconds int64, msg MessageSend)
 		when:    absoluteTime,
 		message: msg,
 	}
-	s.protection.Lock()
-	defer s.protection.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if s.head == nil {
 		s.head = call
 		s.tail = call

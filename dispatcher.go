@@ -55,8 +55,8 @@ func (d *MessageDispatcher) Call(receiver string, method string, arguments ...in
 	})
 }
 
-// DispatchRequest is a v8worker request handler.
-func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
+// ReceiveSync is a v8worker send sync handler.
+func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
 		d.logger.Error("not a valid MessageSend", "err", err)
@@ -64,6 +64,17 @@ func (d *MessageDispatcher) DispatchRequest(jsonFromJS string) string {
 	}
 	msg.IsAsynchronous = false
 	return d.dispatch(msg)
+}
+
+// Receive is a v8worker send async handler.
+func (d *MessageDispatcher) Receive(jsonFromJS string) {
+	var msg MessageSend
+	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
+		d.logger.Error("not a valid MessageSend", "err", err)
+		return
+	}
+	msg.IsAsynchronous = true
+	_ = d.dispatch(msg)
 }
 
 func (d *MessageDispatcher) dispatch(msg MessageSend) string {
@@ -83,17 +94,6 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 		return err.Error() // TODO
 	}
 	return string(data)
-}
-
-// DispatchSend is a v8worker callback handler.
-func (d *MessageDispatcher) DispatchSend(jsonFromJS string) {
-	var msg MessageSend
-	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
-		d.logger.Error("not a valid MessageSend", "err", err)
-		return
-	}
-	msg.IsAsynchronous = true
-	_ = d.dispatch(msg)
 }
 
 func (d *MessageDispatcher) send(ms MessageSend) {

@@ -12,7 +12,7 @@ func (s someApi) ModuleDefinition() (string, string) {
 	return "someApi", `
 		someApi = {};
 		someApi.now = function() {
-			return $request(JSON.stringify({
+			return $sendSync(JSON.stringify({
 				"receiver":"someApi",
 				"selector":"now"
 			}));
@@ -58,6 +58,6 @@ func BenchmarkRequestFromGo(b *testing.B) {
 	}
 	js, _ := msg.JSON()
 	for n := 0; n < b.N; n++ {
-		worker.Request(js)
+		worker.SendSync(js)
 	}
 }
