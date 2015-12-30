@@ -15,7 +15,7 @@ $recv(function(msg) {
 });
 
 // This callback is set for handling function calls in JSON from Go.
-// It is called from Go using "worker.Request(...)".
+// It is called from Go using "worker.SendSync(...)".
 // Throws a SyntaxError exception if the string to parse is not valid JSON.
 // Return the JSON representation of the return value of the handling function.
 //
