@@ -1,6 +1,6 @@
 # v8dispatcher
 
-v8worker add-on for 
+message dispatching framework on top of v8worker  
 - synchronous message calls
 - console logging
 - javascript message dispatch
@@ -8,8 +8,20 @@ v8worker add-on for
 - function scheduler (call later)
 
 
+# synchronous call from Javascript to Go
+	var now = $sendSync(new V8D.MessageSend("time","Now"));
 
-# console
+# synchronous call from Go to Javascript
+	worker.SendSync(v8dispatcher.NewMessage("Date","now"));
+
+# asynchronous call from Javascript to Go
+	$send(new V8D.MessageSend("console","log","hello world"));
+
+# asynchronous call from Go to Javascript
+	worker.Send(v8dispatcher.NewMessage("receiver","",...));
+
+
+# Example: console
 In Javascript, you want to have
 
 	console.log("the answer is", 42);

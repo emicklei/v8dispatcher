@@ -5,7 +5,7 @@
  * author: emicklei
  */
 
-// This callback is set for handling function calls in JSON from Go.
+// This callback is set for handling function calls from Go transferred as JSON.
 // It is called from Go using "worker.Send(...)".
 // Throws a SyntaxError exception if the string to parse is not valid JSON.
 //
@@ -14,7 +14,7 @@ $recv(function(msg) {
     this[obj.selector].apply(this, obj.args)
 });
 
-// This callback is set for handling function calls in JSON from Go.
+// This callback is set for handling function calls from Go transferred as JSON that expect a return value.
 // It is called from Go using "worker.SendSync(...)".
 // Throws a SyntaxError exception if the string to parse is not valid JSON.
 // Return the JSON representation of the return value of the handling function.
