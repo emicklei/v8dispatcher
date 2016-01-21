@@ -26,19 +26,17 @@ In Javascript, you want to have
 
 	console.log("the answer is", 42);
 	
-that will perform the log function of a Go counterpart
+that will perform a log function of a Go counterpart
 
-	type Console struct{}
-	
-	func (c Console) log(args ...interface{}) { }
+	func consoleLog(m MessageSend) (interface{}, error) {
+		log.Println(m.Arguments)
+	}
+	...
+	dispatcher.RegisterFunc("console.log",consoleLog);
 	
 Using this package, your Javascript source will be
 
 	console = {};
 	console.log = function() {
-		$send(JSON.stringify({
-			"receiver":"console",
-			"selector":"log",
-			"args": arguments
-		}));
+		$send(new V8D.MessagesSend("console","log",arguments).toJSON());
 	};
