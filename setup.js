@@ -65,7 +65,7 @@ function go_dispatch(onReturn, receiver, methodName /* args */ ) {
     $send(JSON.stringify(obj));
 }
 
-V8D.MessageSend = function MessageSend(receiver,selector) {
+V8D.MessageSend = function MessageSend(receiver, selector) {
 	this.data = {
 		"receiver" : receiver,
 		"selector" : selector,

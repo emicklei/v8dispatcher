@@ -6,10 +6,13 @@ import (
 )
 
 func TestFunctionSchedulerImmediate(t *testing.T) {
+	Log = func(level, msg string, args ...interface{}) {
+		t.Log(level, msg, args)
+	}
 	worker, dist := newWorkerAndDispatcher(t)
-	rec := &recorder{moduleName: "console"}
-	dist.Register(rec)
-	dist.Register(NewFunctionScheduler(dist))
+	rec := &recorder{}
+	dist.Register("console", rec)
+	dist.Register("V8D", NewFunctionScheduler(dist))
 	if err := worker.Load("TestFunctionScheduler.js", `		
 		V8D.schedule(0,function() {
 			console.log("performed immediately");
@@ -25,9 +28,9 @@ func TestFunctionSchedulerImmediate(t *testing.T) {
 func TestFunctionScheduler100ms(t *testing.T) {
 	worker, dist := newWorkerAndDispatcher(t)
 	s := NewFunctionScheduler(dist)
-	dist.Register(s)
-	rec := &recorder{moduleName: "console"}
-	dist.Register(rec)
+	dist.Register("V8D", s)
+	rec := &recorder{}
+	dist.Register("console", rec)
 	if err := worker.Load("TestFunctionScheduler.js", `		
 		V8D.schedule(100,function() {
 			console.log("performed 100 ms later");

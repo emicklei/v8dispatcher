@@ -4,10 +4,10 @@ import "testing"
 
 // clear && go test -v -test.run=TestConsole
 func TestConsole(t *testing.T) {
-	worker, dist := newWorkerAndDispatcher(t)
-	capture := &recorder{moduleName: "console"}
-	dist.Register(capture)
-	err := worker.Load("console.js", `
+	_, dist := newWorkerAndDispatcher(t)
+	capture := &recorder{}
+	dist.Register("console", capture)
+	err := dist.Worker().Load("console.js", `
 		console.log("size",42);
 	`)
 	if err != nil {

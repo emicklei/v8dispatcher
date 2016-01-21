@@ -9,8 +9,6 @@ import (
 
 func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher()
-	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
-	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
 		//t.Log("reading " + each)
 		src, err := ioutil.ReadFile(each)
@@ -18,18 +16,16 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 			t.Fatal(err)
 		}
 		//t.Log("loading " + each)
-		err = worker.Load(each, string(src))
+		err = dist.Worker().Load(each, string(src))
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	return worker, dist
+	return dist.Worker(), dist
 }
 
 func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher()
-	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
-	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
 		//t.Log("reading " + each)
 		src, err := ioutil.ReadFile(each)
@@ -37,22 +33,18 @@ func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispat
 			b.Fatal(err)
 		}
 		//t.Log("loading " + each)
-		err = worker.Load(each, string(src))
+		err = dist.Worker().Load(each, string(src))
 		if err != nil {
 			b.Fatal(err)
 		}
 	}
-	return worker, dist
+	return dist.Worker(), dist
 }
 
 type recorder struct {
 	moduleName string
 	source     string
 	msg        *MessageSend
-}
-
-func (r recorder) Definition() (string, string, error) {
-	return r.moduleName, r.source, nil
 }
 
 func (r *recorder) Perform(msg MessageSend) (interface{}, error) {

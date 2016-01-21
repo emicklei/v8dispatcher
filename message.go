@@ -5,8 +5,6 @@ import (
 	"fmt"
 )
 
-var NoMessageSend = MessageSend{}
-
 type MessageSend struct {
 	Receiver       string        `json:"receiver" `
 	Selector       string        `json:"selector" `
@@ -30,5 +28,5 @@ type AsyncMessage struct {
 }
 
 func (m AsyncMessage) String() string {
-	return fmt.Sprintf("%s.%s(%v) => (%s, %s)", m.Receiver, m.Selector, m.Arguments, m.Callback, m.OnError)
+	return fmt.Sprintf("%s(%v) => (%s, %s)", m.Selector, m.Arguments, m.Callback, m.OnError)
 }

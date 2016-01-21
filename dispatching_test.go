@@ -1,37 +1,28 @@
 package v8dispatcher
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
 
-type someApi struct{}
+func TestRequestNow(t *testing.T) {
+	worker, dist := newWorkerAndDispatcher(t)
+	rec := &recorder{}
+	dist.Register("console", rec)
 
-func (s someApi) Definition() (string, string, error) {
-	return "someApi", `
+	worker.Load("someApi.js", `
 		someApi = {};
 		someApi.now = function() {
 			return $sendSync(JSON.stringify({
-				"receiver":"someApi",
-				"selector":"now"
+				"selector":"someApi.now"
 			}));
 		};		
-	`, nil
-}
+	`)
 
-func (s someApi) Perform(msg MessageSend) (interface{}, error) {
-	if msg.Selector == "now" {
+	dist.RegisterFunc("someApi.now", func(msg MessageSend) (interface{}, error) {
 		return time.Now(), nil
-	}
-	return nil, fmt.Errorf(ErrNoSuchMethod, "someApi", msg.Selector)
-}
+	})
 
-func TestRequestNow(t *testing.T) {
-	worker, dist := newWorkerAndDispatcher(t)
-	rec := &recorder{moduleName: "console"}
-	dist.Register(rec)
-	dist.Register(someApi{})
 	if err := worker.Load("TestRequestNow.js", `
 		console.log(someApi.now())
 	`); err != nil {
@@ -40,6 +31,7 @@ func TestRequestNow(t *testing.T) {
 	if len(rec.msg.Arguments[0].(string)) == 0 {
 		t.Fail()
 	}
+	t.Log(rec.msg.Arguments[0])
 }
 
 func BenchmarkRequestFromGo(b *testing.B) {

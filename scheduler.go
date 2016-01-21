@@ -22,27 +22,30 @@ type FunctionScheduler struct {
 }
 
 func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
-	return &FunctionScheduler{
+	fs := &FunctionScheduler{
 		mutex:      new(sync.RWMutex),
 		dispatcher: dispatcher,
 	}
+	dispatcher.Worker().Load("FunctionScheduler.js", fs.Source())
+	return fs
 }
 
-func (s *FunctionScheduler) Definition() (string, string, error) {
-	return "v8dispatcher.FunctionScheduler", `
+func (s *FunctionScheduler) Source() string {
+	return `
 		V8D.schedule = function(after,then) {			
 			var msg = new V8D.MessageSend(
-				"v8dispatcher.FunctionScheduler",
+				"V8D",
 				"schedule",
 				after,
 				V8D.function_registry.put(then)
 			);	
 			$send(msg.toJSON());
 		}
-	`, nil
+	`
 }
 
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
+	Log("debug", "perform", "msg", msg)
 	if "schedule" != msg.Selector {
 		return nil, fmt.Errorf(ErrNoSuchMethod, "go_scheduler", msg.Selector)
 	}
@@ -59,7 +62,7 @@ func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 	}
 	scheduledMsg := MessageSend{
 		Receiver:  "this",
-		Selector:  "callback_dispatch",
+		Selector:  "callback_dispatch", // TODO V8D.
 		Arguments: []interface{}{then},
 	}
 	return nil, s.Schedule(int64(when), scheduledMsg)

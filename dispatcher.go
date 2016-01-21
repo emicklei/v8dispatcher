@@ -11,36 +11,40 @@ var (
 	ErrNoSuchMethod = "%s does not understand %s"
 )
 
+type MessageSendHandlerFunc func(MessageSend) (interface{}, error)
+
+type MessageSendHandler interface {
+	Perform(MessageSend) (interface{}, error)
+}
+
 // MessageDispatcher is responsible for handling messages send from Javascript.
 // It will do a receiver lookup and perform the messages by the receiver.
 type MessageDispatcher struct {
-	messageHandlers map[string]Module
-	worker          *v8worker.Worker
+	messageHandlerFuncs map[string]MessageSendHandlerFunc
+	messageHandlers     map[string]MessageSendHandler
+	worker              *v8worker.Worker
 }
 
 func NewMessageDispatcher() *MessageDispatcher {
-	return &MessageDispatcher{
-		messageHandlers: map[string]Module{},
+	d := &MessageDispatcher{
+		messageHandlerFuncs: map[string]MessageSendHandlerFunc{},
+		messageHandlers:     map[string]MessageSendHandler{},
 	}
+	w := v8worker.New(d.Receive, d.ReceiveSync)
+	d.worker = w
+	return d
 }
 
-// Worker sets the required v8worker. This cannot be a constructor arg because a worker is created with a handler, the dispatcher itself.
-func (d *MessageDispatcher) Worker(worker *v8worker.Worker) {
-	d.worker = worker
+func (d *MessageDispatcher) Worker() *v8worker.Worker {
+	return d.worker
 }
 
-// Register adds a Module and makes it available to Javascript by its defintion name.
-// Not yet threadsafe
-func (d *MessageDispatcher) Register(p Module) error {
-	name, source, _ := p.Definition()
-	if len(source) > 0 {
-		if err := d.worker.Load("v8dispatcher_"+name+".js", source); err != nil {
-			Log("error", "module load failed", "module", name, "err", err.Error())
-			return err
-		}
-	}
-	d.messageHandlers[name] = p
-	return nil
+func (d *MessageDispatcher) RegisterFunc(name string, handler MessageSendHandlerFunc) {
+	d.messageHandlerFuncs[name] = handler
+}
+
+func (d *MessageDispatcher) Register(name string, handler MessageSendHandler) {
+	d.messageHandlers[name] = handler
 }
 
 // Call dispatches a function in Javascript
@@ -75,12 +79,23 @@ func (d *MessageDispatcher) Receive(jsonFromJS string) {
 }
 
 func (d *MessageDispatcher) dispatch(msg MessageSend) string {
-	performer, ok := d.messageHandlers[msg.Receiver]
-	if !ok {
-		Log("error", "unknown receiver", "receiver", msg.Receiver)
-		return "" // TODO
+	var result interface{}
+	var err error
+	if len(msg.Receiver) == 0 {
+		performer, ok := d.messageHandlerFuncs[msg.Selector]
+		if !ok {
+			Log("error", "no handler func", "selector", msg.Selector)
+			return "" // TODO
+		}
+		result, err = performer(msg)
+	} else {
+		performer, ok := d.messageHandlers[msg.Receiver]
+		if !ok {
+			Log("error", "no handler", "receiver", msg.Receiver)
+			return "" // TODO
+		}
+		result, err = performer.Perform(msg)
 	}
-	result, err := performer.Perform(msg)
 	if err != nil {
 		Log("error", err.Error())
 		return err.Error() // TODO
