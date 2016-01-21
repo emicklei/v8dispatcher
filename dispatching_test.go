@@ -8,7 +8,7 @@ import (
 
 type someApi struct{}
 
-func (s someApi) ModuleDefinition() (string, string) {
+func (s someApi) Definition() (string, string, error) {
 	return "someApi", `
 		someApi = {};
 		someApi.now = function() {
@@ -17,7 +17,7 @@ func (s someApi) ModuleDefinition() (string, string) {
 				"selector":"now"
 			}));
 		};		
-	`
+	`, nil
 }
 
 func (s someApi) Perform(msg MessageSend) (interface{}, error) {

@@ -5,7 +5,7 @@ type Module interface {
 	// ModuleDefinition returns the name of the module as it will be known in Javascript
 	// and Javascript source to create this module (global variable).
 	// It returns an error if loading the source failed.
-	ModuleDefinition() (string, string, error)
+	Definition() (name string, source string, err error)
 
 	// Perform will call the function associated with the Method of the message.
 	// The returnValue must be JSON marshallable

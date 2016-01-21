@@ -4,13 +4,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"gopkg.in/inconshreveable/log15.v2"
-
 	"github.com/emicklei/v8worker"
 )
 
 func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
-	dist := NewMessageDispatcher(log15.New())
+	dist := NewMessageDispatcher()
 	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
 	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
@@ -29,7 +27,7 @@ func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher)
 }
 
 func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
-	dist := NewMessageDispatcher(log15.New())
+	dist := NewMessageDispatcher()
 	worker := v8worker.New(dist.Receive, dist.ReceiveSync)
 	dist.Worker(worker)
 	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
@@ -53,8 +51,8 @@ type recorder struct {
 	msg        *MessageSend
 }
 
-func (r recorder) ModuleDefinition() (string, string) {
-	return r.moduleName, r.source
+func (r recorder) Definition() (string, string, error) {
+	return r.moduleName, r.source, nil
 }
 
 func (r *recorder) Perform(msg MessageSend) (interface{}, error) {

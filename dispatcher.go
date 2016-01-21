@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/emicklei/v8worker"
-	"gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
@@ -15,14 +14,12 @@ var (
 // MessageDispatcher is responsible for handling messages send from Javascript.
 // It will do a receiver lookup and perform the messages by the receiver.
 type MessageDispatcher struct {
-	logger          log15.Logger
 	messageHandlers map[string]Module
 	worker          *v8worker.Worker
 }
 
-func NewMessageDispatcher(aLogger log15.Logger) *MessageDispatcher {
+func NewMessageDispatcher() *MessageDispatcher {
 	return &MessageDispatcher{
-		logger:          aLogger,
 		messageHandlers: map[string]Module{},
 	}
 }
@@ -35,10 +32,10 @@ func (d *MessageDispatcher) Worker(worker *v8worker.Worker) {
 // Register adds a Module and makes it available to Javascript by its defintion name.
 // Not yet threadsafe
 func (d *MessageDispatcher) Register(p Module) error {
-	name, source := p.ModuleDefinition()
+	name, source, _ := p.Definition()
 	if len(source) > 0 {
 		if err := d.worker.Load("v8dispatcher_"+name+".js", source); err != nil {
-			d.logger.Error("module load failed", "module", name, "err", err.Error())
+			Log("error", "module load failed", "module", name, "err", err.Error())
 			return err
 		}
 	}
@@ -59,7 +56,7 @@ func (d *MessageDispatcher) Call(receiver string, method string, arguments ...in
 func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
-		d.logger.Error("not a valid MessageSend", "err", err)
+		Log("error", "not a valid MessageSend", "err", err)
 		return err.Error() // TODO
 	}
 	msg.IsAsynchronous = false
@@ -70,7 +67,7 @@ func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 func (d *MessageDispatcher) Receive(jsonFromJS string) {
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
-		d.logger.Error("not a valid MessageSend", "err", err)
+		Log("error", "not a valid MessageSend", "err", err)
 		return
 	}
 	msg.IsAsynchronous = true
@@ -80,17 +77,17 @@ func (d *MessageDispatcher) Receive(jsonFromJS string) {
 func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 	performer, ok := d.messageHandlers[msg.Receiver]
 	if !ok {
-		d.logger.Error("unknown receiver", "receiver", msg.Receiver)
+		Log("error", "unknown receiver", "receiver", msg.Receiver)
 		return "" // TODO
 	}
 	result, err := performer.Perform(msg)
 	if err != nil {
-		d.logger.Error(err.Error())
+		Log("error", err.Error())
 		return err.Error() // TODO
 	}
 	data, err := json.Marshal(result)
 	if err != nil {
-		d.logger.Error(err.Error())
+		Log("error", err.Error())
 		return err.Error() // TODO
 	}
 	return string(data)
@@ -99,10 +96,10 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 func (d *MessageDispatcher) send(ms MessageSend) {
 	callbackJSON, err := ms.JSON()
 	if err != nil {
-		d.logger.Error("message encode failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
+		Log("error", "message encode failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
 		return
 	}
 	if err := d.worker.Send(callbackJSON); err != nil {
-		d.logger.Error("work send failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
+		Log("error", "work send failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
 	}
 }

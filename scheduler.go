@@ -28,16 +28,18 @@ func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 	}
 }
 
-func (s *FunctionScheduler) ModuleDefinition() (string, string) {
-	return "go_scheduler", `
-		V8D.schedule = function(after,then) {
-			$send(JSON.stringify({
-				"receiver" : "go_scheduler",
-				"selector" : "schedule",
-				"args"     : [ after, V8D.function_registry.put(then) ]
-			}));
+func (s *FunctionScheduler) Definition() (string, string, error) {
+	return "v8dispatcher.FunctionScheduler", `
+		V8D.schedule = function(after,then) {			
+			var msg = new V8D.MessageSend(
+				"v8dispatcher.FunctionScheduler",
+				"schedule",
+				after,
+				V8D.function_registry.put(then)
+			);	
+			$send(msg.toJSON());
 		}
-	`
+	`, nil
 }
 
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
