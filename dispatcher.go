@@ -36,6 +36,13 @@ func NewMessageDispatcher() *MessageDispatcher {
 	}
 	w := v8worker.New(d.Receive, d.ReceiveSync)
 	d.worker = w
+	// load scripts
+	for _, each := range []string{"js/registry.js", "js/setup.js", "js/console.js"} {
+		data, _ := Asset(each)
+		if err := w.Load(each, string(data)); err != nil {
+			Log("error", "script load error", "source", each, "err", err)
+		}
+	}
 	return d
 }
 
@@ -105,23 +112,25 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 	var result interface{}
 	var err error
 	if len(msg.Receiver) == 0 {
-		performer, ok := d.messageHandlerFuncs[msg.Selector]
+		performerFunc, ok := d.messageHandlerFuncs[msg.Selector]
 		if !ok {
-			Log("error", "no handler func", "selector", msg.Selector)
-			return "" // TODO
+			Log("warn", "no handler func", "selector", msg.Selector)
+			return "null"
 		}
-		result, err = performer(msg)
+		result, err = performerFunc(msg)
 	} else {
 		performer, ok := d.messageHandlers[msg.Receiver]
 		if !ok {
 			// retry with receiver.selector
-			performer, ok = d.messageHandlers[fmt.Sprintf("%s.%s", msg.Receiver, msg.Selector)]
+			performerFunc, ok := d.messageHandlerFuncs[fmt.Sprintf("%s.%s", msg.Receiver, msg.Selector)]
 			if !ok {
-				Log("error", "no handler", "receiver", msg.Receiver, "selector", msg.Selector)
-				return "" // TODO
+				Log("warn", "no handler", "receiver", msg.Receiver, "selector", msg.Selector)
+				return "null"
 			}
+			result, err = performerFunc(msg)
+		} else {
+			result, err = performer.Perform(msg)
 		}
-		result, err = performer.Perform(msg)
 	}
 	if err != nil {
 		Log("error", err.Error())
@@ -148,8 +157,11 @@ func (d *MessageDispatcher) send(ms MessageSend) (interface{}, error) {
 		}
 	} else {
 		msg := d.worker.SendSync(callbackJSON)
-		// TODO how to detect error
-		return msg, nil
+		var value interface{}
+		if err := json.Unmarshal([]byte(msg), &value); err != nil {
+			return nil, err
+		}
+		return value, nil
 	}
 	return nil, nil
 }

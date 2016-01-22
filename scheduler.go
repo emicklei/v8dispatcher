@@ -45,7 +45,6 @@ func (s *FunctionScheduler) Source() string {
 }
 
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
-	Log("debug", "perform", "msg", msg)
 	if "schedule" != msg.Selector {
 		return nil, fmt.Errorf(ErrNoSuchMethod, "go_scheduler", msg.Selector)
 	}
@@ -89,7 +88,7 @@ func (s *FunctionScheduler) PerformCallsBefore(when time.Time) {
 	}
 }
 
-// Schedule adds call to be performed in the future.
+// Schedule adds a call to be performed in the future.
 func (s *FunctionScheduler) Schedule(delayInMilliseconds int64, msg MessageSend) error {
 	if delayInMilliseconds < 0 {
 		return errors.New("cannot schedule a function call in the past")

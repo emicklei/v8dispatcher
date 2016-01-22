@@ -1,7 +1,6 @@
 package v8dispatcher
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/emicklei/v8worker"
@@ -9,35 +8,11 @@ import (
 
 func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher()
-	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
-		//t.Log("reading " + each)
-		src, err := ioutil.ReadFile(each)
-		if err != nil {
-			t.Fatal(err)
-		}
-		//t.Log("loading " + each)
-		err = dist.Worker().Load(each, string(src))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
 	return dist.Worker(), dist
 }
 
 func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher()
-	for _, each := range []string{"registry.js", "setup.js", "console.js"} {
-		//t.Log("reading " + each)
-		src, err := ioutil.ReadFile(each)
-		if err != nil {
-			b.Fatal(err)
-		}
-		//t.Log("loading " + each)
-		err = dist.Worker().Load(each, string(src))
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
 	return dist.Worker(), dist
 }
 

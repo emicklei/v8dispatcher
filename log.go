@@ -14,5 +14,5 @@ var Log = func(level, msg string, kvs ...interface{}) {
 	for i := 0; i < len(kvs); i = i + 2 {
 		fmt.Fprintf(buf, ", %v = %v", kvs[i], kvs[i+1])
 	}
-	log.Println(buf.String)
+	log.Println(buf.String())
 }
