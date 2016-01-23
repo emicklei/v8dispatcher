@@ -6,6 +6,10 @@ import (
 	"github.com/emicklei/v8worker"
 )
 
+func init() {
+	Debug = true
+}
+
 func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
 	dist := NewMessageDispatcher()
 	return dist.Worker(), dist
@@ -32,12 +36,12 @@ func expectConsoleLogArgument(t *testing.T, rec *recorder, arg interface{}) {
 		t.Fatal("message not recorded")
 	}
 	if got, want := rec.msg.Selector, "log"; got != want {
-		t.Errorf("got %v want %v", got, want)
+		t.Errorf("got [%v] want [%v]", got, want)
 	}
 	if got, want := len(rec.msg.Arguments), 1; got != want {
-		t.Errorf("got %v want %v", got, want)
+		t.Errorf("got [%v] want [%v]", got, want)
 	}
 	if got, want := rec.msg.Arguments[0], arg; got != want {
-		t.Errorf("got %v want %v", got, want)
+		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }

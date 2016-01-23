@@ -86,6 +86,9 @@ func (d *MessageDispatcher) SendSync(receiver string, method string, arguments .
 
 // ReceiveSync is a v8worker send sync handler.
 func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
+	if Debug {
+		Log("ReceiveSync", "json", jsonFromJS)
+	}
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
 		Log("error", "not a valid MessageSend", "err", err)
@@ -97,6 +100,9 @@ func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 
 // Receive is a v8worker send async handler.
 func (d *MessageDispatcher) Receive(jsonFromJS string) {
+	if Debug {
+		Log("Receive", "json", jsonFromJS)
+	}
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
 		Log("error", "not a valid MessageSend", "err", err)
@@ -109,6 +115,9 @@ func (d *MessageDispatcher) Receive(jsonFromJS string) {
 // dispatch finds the Go handler registered, calls it and returns the JSON representation of the return value.
 // lookup by "receiver" first then "selector" then "receiver.selector" of the message argument.
 func (d *MessageDispatcher) dispatch(msg MessageSend) string {
+	if Debug {
+		Log("dispatch", "msg", msg)
+	}
 	var result interface{}
 	var err error
 	if len(msg.Receiver) == 0 {
@@ -133,32 +142,36 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 		}
 	}
 	if err != nil {
-		Log("error", err.Error())
+		Log("error", "perform failed", "err", err.Error())
 		return err.Error() // TODO
 	}
 	data, err := json.Marshal(result)
 	if err != nil {
-		Log("error", err.Error())
+		Log("error", "marshal error", "err", err.Error())
 		return err.Error() // TODO
 	}
 	return string(data)
 }
 
-func (d *MessageDispatcher) send(ms MessageSend) (interface{}, error) {
-	callbackJSON, err := ms.JSON()
+func (d *MessageDispatcher) send(msg MessageSend) (interface{}, error) {
+	if Debug {
+		Log("send", "msg", msg)
+	}
+	callbackJSON, err := msg.JSON()
 	if err != nil {
-		Log("error", "message encode failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
+		Log("error", "message encode failure", "receiver", msg.Receiver, "method", msg.Selector, "err", err)
 		return nil, err
 	}
-	if ms.IsAsynchronous {
+	if msg.IsAsynchronous {
 		if err := d.worker.Send(callbackJSON); err != nil {
-			Log("error", "work send failure", "receiver", ms.Receiver, "method", ms.Selector, "err", err)
+			Log("error", "work send failure", "receiver", msg.Receiver, "method", msg.Selector, "err", err)
 			return nil, err
 		}
 	} else {
 		msg := d.worker.SendSync(callbackJSON)
 		var value interface{}
 		if err := json.Unmarshal([]byte(msg), &value); err != nil {
+			Log("error", "unmarshal Javascript message failure", "msg", msg, "err", err)
 			return nil, err
 		}
 		return value, nil

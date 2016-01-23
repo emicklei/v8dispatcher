@@ -15,38 +15,40 @@ type scheduledCall struct {
 	previous, next *scheduledCall
 }
 
+// FunctionScheduler hold MessageSend values that are performed after a specified time.
 type FunctionScheduler struct {
 	mutex      *sync.RWMutex
 	head, tail *scheduledCall
 	dispatcher *MessageDispatcher
 }
 
+// NewFunctionScheduler returns a new FunctionScheduler and registers itself as a MessageHandler.
 func NewFunctionScheduler(dispatcher *MessageDispatcher) *FunctionScheduler {
 	fs := &FunctionScheduler{
 		mutex:      new(sync.RWMutex),
 		dispatcher: dispatcher,
 	}
-	dispatcher.Worker().Load("FunctionScheduler.js", fs.Source())
+	dispatcher.Worker().Load("FunctionScheduler.js", fs.source())
+	dispatcher.Register("V8D.scheduler", fs)
 	return fs
 }
 
-func (s *FunctionScheduler) Source() string {
+// source returns the Javascript initialization to provide the scheduling function.
+func (s *FunctionScheduler) source() string {
 	return `
 		V8D.schedule = function(after,then) {			
-			var msg = new V8D.MessageSend(
-				"V8D",
-				"schedule",
-				after,
-				V8D.function_registry.put(then)
-			);	
-			$send(msg.toJSON());
+			V8D.call("V8D.scheduler", "schedule", after, V8D.function_registry.put(then));
 		}
 	`
 }
 
+// Perform handles a message send from Javascript. FunctionScheduler is a MessageHandler.
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
+	if Debug {
+		Log("Perform", "msg", msg)
+	}
 	if "schedule" != msg.Selector {
-		return nil, fmt.Errorf(ErrNoSuchMethod, "go_scheduler", msg.Selector)
+		return nil, fmt.Errorf(ErrNoSuchMethod, "V8D.scheduler", msg.Selector)
 	}
 	if len(msg.Arguments) != 2 {
 		return nil, errors.New("expected `after` and `then` arguments")
@@ -60,9 +62,10 @@ func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 		return nil, errors.New("second argument `then` must be a function reference (string)")
 	}
 	scheduledMsg := MessageSend{
-		Receiver:  "this",
-		Selector:  "callback_dispatch", // TODO V8D.
-		Arguments: []interface{}{then},
+		Receiver:       "V8D",
+		Selector:       "callDispatch",
+		Arguments:      []interface{}{then},
+		IsAsynchronous: true,
 	}
 	return nil, s.Schedule(int64(when), scheduledMsg)
 }

@@ -14,17 +14,18 @@ console.print = function() {
     }
     $print(msg)
 }
+
 // log takes a variable number of arguments
 //
-console.log = function() {
-	var args = [];
-	// flatten all arguments	
-	for (var i = 0; i < arguments.length; i++) {
-       args.push(arguments[i]);
+console.log = function( /* arguments */ ) {
+    var args = [];
+    // flatten all arguments	
+    for (var i = 0; i < arguments.length; i++) {
+        args.push(arguments[i]);
     }
-	$send(JSON.stringify({
-		"receiver":"console",
-		"selector":"log",
-		"args": args
-	}));
+    $send(JSON.stringify({
+        "receiver": "console",
+        "selector": "log",
+        "args": args
+    }));
 }

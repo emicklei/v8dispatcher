@@ -13,9 +13,7 @@ func TestRequestNow(t *testing.T) {
 	worker.Load("someApi.js", `
 		someApi = {};
 		someApi.now = function() {
-			return $sendSync(JSON.stringify({
-				"selector":"someApi.now"
-			}));
+			return V8D.callReturn("","someApi.now");
 		};		
 	`)
 
@@ -28,10 +26,20 @@ func TestRequestNow(t *testing.T) {
 	`); err != nil {
 		t.Fatal(err)
 	}
-	if len(rec.msg.Arguments[0].(string)) == 0 {
+	if rec.msg == nil {
+		t.Fatal("no msg recorded")
+	}
+	if len(rec.msg.Arguments) == 0 {
+		t.Fatal("no arguments recorded")
+	}
+	s, ok := rec.msg.Arguments[0].(string)
+	if !ok {
+		t.Fatal("string expected")
+	}
+	if len(s) == 0 {
 		t.Fail()
 	}
-	t.Log(rec.msg.Arguments[0])
+	t.Logf("%#v", rec.msg)
 }
 
 func BenchmarkRequestFromGo(b *testing.B) {

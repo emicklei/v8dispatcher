@@ -40,3 +40,12 @@ Using this package, your Javascript source will be
 	console.log = function() {
 		$send(new V8D.MessagesSend("console","log",arguments).toJSON());
 	};
+	
+	console.log = function() {
+		V8D.call("console","log",arguments);
+	};	
+	
+	var result = V8D.callReturn("time","now");
+	
+	
+	V8D.
