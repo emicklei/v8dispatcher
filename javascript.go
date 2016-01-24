@@ -133,7 +133,7 @@ func jsSetupJs() (*asset, error) {
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
-func Asset(name string) ([]byte, error) {
+func getAsset(name string) ([]byte, error) {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[cannonicalName]; ok {
 		a, err := f()
@@ -147,8 +147,8 @@ func Asset(name string) ([]byte, error) {
 
 // MustAsset is like Asset but panics when Asset would return an error.
 // It simplifies safe initialization of global variables.
-func MustAsset(name string) []byte {
-	a, err := Asset(name)
+func getMustAsset(name string) []byte {
+	a, err := getAsset(name)
 	if err != nil {
 		panic("asset: Asset(" + name + "): " + err.Error())
 	}
@@ -159,7 +159,7 @@ func MustAsset(name string) []byte {
 // AssetInfo loads and returns the asset info for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
-func AssetInfo(name string) (os.FileInfo, error) {
+func getAssetInfo(name string) (os.FileInfo, error) {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	if f, ok := _bindata[cannonicalName]; ok {
 		a, err := f()
@@ -172,7 +172,7 @@ func AssetInfo(name string) (os.FileInfo, error) {
 }
 
 // AssetNames returns the names of the assets.
-func AssetNames() []string {
+func getAssetNames() []string {
 	names := make([]string, 0, len(_bindata))
 	for name := range _bindata {
 		names = append(names, name)
@@ -182,9 +182,9 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"js/console.js": jsConsoleJs,
+	"js/console.js":  jsConsoleJs,
 	"js/registry.js": jsRegistryJs,
-	"js/setup.js": jsSetupJs,
+	"js/setup.js":    jsSetupJs,
 }
 
 // AssetDir returns the file names below a certain
@@ -200,7 +200,7 @@ var _bindata = map[string]func() (*asset, error){
 // AssetDir("data/img") would return []string{"a.png", "b.png"}
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error
 // AssetDir("") will return []string{"data"}.
-func AssetDir(name string) ([]string, error) {
+func getAssetDir(name string) ([]string, error) {
 	node := _bintree
 	if len(name) != 0 {
 		cannonicalName := strings.Replace(name, "\\", "/", -1)
@@ -226,21 +226,22 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
 	"js": &bintree{nil, map[string]*bintree{
-		"console.js": &bintree{jsConsoleJs, map[string]*bintree{}},
+		"console.js":  &bintree{jsConsoleJs, map[string]*bintree{}},
 		"registry.js": &bintree{jsRegistryJs, map[string]*bintree{}},
-		"setup.js": &bintree{jsSetupJs, map[string]*bintree{}},
+		"setup.js":    &bintree{jsSetupJs, map[string]*bintree{}},
 	}},
 }}
 
 // RestoreAsset restores an asset under the given directory
-func RestoreAsset(dir, name string) error {
-	data, err := Asset(name)
+func doRestoreAsset(dir, name string) error {
+	data, err := getAsset(name)
 	if err != nil {
 		return err
 	}
-	info, err := AssetInfo(name)
+	info, err := getAssetInfo(name)
 	if err != nil {
 		return err
 	}
@@ -260,15 +261,15 @@ func RestoreAsset(dir, name string) error {
 }
 
 // RestoreAssets restores an asset under the given directory recursively
-func RestoreAssets(dir, name string) error {
-	children, err := AssetDir(name)
+func doRestoreAssets(dir, name string) error {
+	children, err := getAssetDir(name)
 	// File
 	if err != nil {
-		return RestoreAsset(dir, name)
+		return doRestoreAsset(dir, name)
 	}
 	// Dir
 	for _, child := range children {
-		err = RestoreAssets(dir, filepath.Join(name, child))
+		err = doRestoreAssets(dir, filepath.Join(name, child))
 		if err != nil {
 			return err
 		}
@@ -280,4 +281,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-

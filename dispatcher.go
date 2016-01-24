@@ -21,7 +21,8 @@ type MessageSendHandler interface {
 }
 
 // MessageDispatcher is responsible for handling messages send from Javascript.
-// It will do a receiver lookup and perform the messages by the receiver.
+// It will do a receiver lookup and perform the message of the receiver.
+// If no receiver given then the lookup is based on the selector to find the registered function.
 type MessageDispatcher struct {
 	messageHandlerFuncs map[string]MessageSendHandlerFunc
 	messageHandlers     map[string]MessageSendHandler
@@ -38,7 +39,7 @@ func NewMessageDispatcher() *MessageDispatcher {
 	d.worker = w
 	// load scripts
 	for _, each := range []string{"js/registry.js", "js/setup.js", "js/console.js"} {
-		data, _ := Asset(each)
+		data, _ := getAsset(each)
 		if err := w.Load(each, string(data)); err != nil {
 			Log("error", "script load error", "source", each, "err", err)
 		}
@@ -65,8 +66,8 @@ func (d *MessageDispatcher) Register(name string, handler MessageSendHandler) {
 	d.messageHandlers[name] = handler
 }
 
-// Send is an asynchronous call to Javascript and does no expect a return value
-func (d *MessageDispatcher) Send(receiver string, method string, arguments ...interface{}) error {
+// Call is an asynchronous call to Javascript and does no expect a return value
+func (d *MessageDispatcher) Call(receiver string, method string, arguments ...interface{}) error {
 	_, err := d.send(MessageSend{
 		Receiver:       receiver,
 		Selector:       method,
@@ -76,8 +77,8 @@ func (d *MessageDispatcher) Send(receiver string, method string, arguments ...in
 	return err
 }
 
-// SendSync is synchronous call to Javascript and expects a return value
-func (d *MessageDispatcher) SendSync(receiver string, method string, arguments ...interface{}) (interface{}, error) {
+// CallReturn is synchronous call to Javascript and expects a return value
+func (d *MessageDispatcher) CallReturn(receiver string, method string, arguments ...interface{}) (interface{}, error) {
 	return d.send(MessageSend{
 		Receiver:       receiver,
 		Selector:       method,

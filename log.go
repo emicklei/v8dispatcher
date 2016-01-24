@@ -25,6 +25,8 @@ var Log = func(level, msg string, kvs ...interface{}) {
 	log.Println(buf.String())
 }
 
+// ConsoleLog is the default registered function for "console.log"
+// Register your own function to override this behavior.
 func ConsoleLog(msg MessageSend) (interface{}, error) {
 	log.Println(msg.Arguments...)
 	return nil, nil

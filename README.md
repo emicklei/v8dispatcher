@@ -1,51 +1,104 @@
 # v8dispatcher
 
-message dispatching framework on top of v8worker  
-- synchronous message calls
-- console logging
-- javascript message dispatch
-- Go message dispatch
-- function scheduler (call later)
+v8dispatcher is a Go package for communicating to and from Javascript running in V8.
+It provides a message abstraction layer on top of the v8worker package which has been enhanced to support synchronous messaging.
+The v8dispatcher has a MessageDispatcher component that is used to dispatch MessageSend values to function calls, both in Go and in Javascript.
 
+### Calling Go from Javascript
 
-# synchronous call from Javascript to Go
-	var now = $sendSync(new V8D.MessageSend("time","Now"));
+__Go__
 
-# synchronous call from Go to Javascript
-	worker.SendSync(v8dispatcher.NewMessage("Date","now"));
-
-# asynchronous call from Javascript to Go
-	$send(new V8D.MessageSend("console","log","hello world"));
-
-# asynchronous call from Go to Javascript
-	worker.Send(v8dispatcher.NewMessage("receiver","",...));
-
-
-# Example: console
-In Javascript, you want to have
-
-	console.log("the answer is", 42);
+	md := NewMessageDispatcher()
+	md.RegisterFunc("now",func(m MessageSend) (interface{},error) {
+		return time.Now(), nil	
+	})
 	
-that will perform a log function of a Go counterpart
+__Javascript__
 
-	func consoleLog(m MessageSend) (interface{}, error) {
-		log.Println(m.Arguments)
+	var now = V8D.callReturn("now");		
+	
+This is the minimal example for which a simple function (no arguments) is registered and called from Javascript when loading the source like this
+
+__Go__	
+	
+	md.Worker().Load("example.js", `var now = V8D.callReturn("now");`)
+
+
+### Calling Javascript from Go
+
+__Javascript__
+
+	function now() {
+		return new Date();
 	}
-	...
-	dispatcher.RegisterFunc("console.log",consoleLog);
 	
-Using this package, your Javascript source will be
+__Go__
 
-	console = {};
-	console.log = function() {
-		$send(new V8D.MessagesSend("console","log",arguments).toJSON());
-	};
-	
-	console.log = function() {
-		V8D.call("console","log",arguments);
-	};	
-	
-	var result = V8D.callReturn("time","now");
+	md := NewMessageDispatcher()
+	now, _ := md.CallReturn("this","now")
 	
 	
-	V8D.
+### Asynchronous call from Javascript
+
+__Go__
+
+	md := NewMessageDispatcher()
+	md.RegisterFunc("handleEvent",func(m MessageSend) (interface{},error) {
+		data := m.Arguments[0]["data"]
+		...
+		return nil, nil	
+	})
+
+__Javascript__
+
+	V8D.call("handleEvent", {"data": "some event data"});
+	
+### Asynchronous call from Go
+
+__Javascript__
+
+	function handleEvent(data) {
+		...
+	}
+
+__Go__
+
+	md := NewMessageDispatcher()
+	md.Call("this","handleEvent",map[string]interface{}{
+		"data" : "some event data",
+	})
+	
+### MessageHandler
+
+To invoke Go methods from Javascript, you can register a value whoes type implements the `MessageHandler` interface.
+
+__Go__
+
+	type MusicPlayer struct {}
+	
+	func (m MusicPlayer) Perform(m MessageSend) (interface{}, error) {
+		switch (m.Selector) {
+			case "start": { ... }
+			case "stop": { ... }
+			case "pause": { ... }
+			case "reset": { ... }
+			default: return nil , errors.New("unknown selector")
+		}
+	}
+
+Register an instance of MusicPlayer
+
+__Go__
+
+		player := MusicPlayer{}
+		md := NewMessageDispatcher()
+		md.Register("player", player)
+
+Now you can use this from Javascript
+
+__Javascript__
+
+	V8D.call("player","start");
+	
+	
+	

@@ -26,16 +26,16 @@ var someApiSrc = `
 	`
 
 func TestCallReturn(t *testing.T) {
-	worker, dist := newWorkerAndDispatcher(t)
+	dist := NewMessageDispatcher()
 	rec := &recorder{}
 	dist.Register("console", rec)
-	worker.Load("someApi.js", someApiSrc)
+	dist.Worker().Load("someApi.js", someApiSrc)
 
 	dist.RegisterFunc("someApi.now", func(msg MessageSend) (interface{}, error) {
 		return time.Now(), nil
 	})
 
-	if err := worker.Load("TestRequestNow.js", `
+	if err := dist.Worker().Load("TestRequestNow.js", `
 		console.log(someApi.now())
 	`); err != nil {
 		t.Fatal(err)
@@ -57,16 +57,16 @@ func TestCallReturn(t *testing.T) {
 }
 
 func TestCallThen(t *testing.T) {
-	worker, dist := newWorkerAndDispatcher(t)
+	dist := NewMessageDispatcher()
 	rec := &recorder{}
 	dist.Register("console", rec)
-	worker.Load("someApi.js", someApiSrc)
+	dist.Worker().Load("someApi.js", someApiSrc)
 
 	dist.RegisterFunc("someApi.now", func(msg MessageSend) (interface{}, error) {
 		return time.Now(), nil
 	})
 
-	if err := worker.Load("TestRequestNow.js", `
+	if err := dist.Worker().Load("TestRequestNow.js", `
 		someApi.callThen()
 	`); err != nil {
 		t.Fatal(err)
@@ -77,11 +77,19 @@ func TestCallThen(t *testing.T) {
 	if len(rec.msg.Arguments) == 0 {
 		t.Fatal("no arguments recorded")
 	}
+	s, ok := rec.msg.Arguments[0].(string)
+	if !ok {
+		t.Fatal("string expected")
+	}
+	if s != "callThen" {
+		t.Fail()
+	}
 	t.Logf("%#v", rec.msg)
 }
 
 func BenchmarkRequestFromGo(b *testing.B) {
-	worker, _ := benchNewWorkerAndDispatcher(b)
+	dist := NewMessageDispatcher()
+	worker := dist.Worker()
 	if err := worker.Load("BenchmarkRequestFromGo.js", `
 		function dummy(what) {
 			return what;

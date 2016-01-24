@@ -4,7 +4,7 @@ import "testing"
 
 // clear && go test -v -test.run=TestConsole
 func TestConsole(t *testing.T) {
-	_, dist := newWorkerAndDispatcher(t)
+	dist := NewMessageDispatcher()
 	capture := &recorder{}
 	dist.Register("console", capture)
 	err := dist.Worker().Load("console.js", `

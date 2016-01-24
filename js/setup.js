@@ -54,7 +54,7 @@ V8D.callDispatch = function(functionRef /*, arguments */ ) {
     callback.apply(this, args);
 }
 
-// MessageSend is a constructor
+// MessageSend is a constructor.
 //
 V8D.MessageSend = function MessageSend(receiver, selector, onReturn) {
     this.data = {
@@ -65,7 +65,7 @@ V8D.MessageSend = function MessageSend(receiver, selector, onReturn) {
     };
 }
 
-// MessageSend toJSON returns the JSON representation
+// MessageSend toJSON returns the JSON representation.
 //
 V8D.MessageSend.prototype = {
     toJSON: function() {
@@ -95,8 +95,8 @@ V8D.call = function(receiver, selector /*, arguments */ ) {
     $send(JSON.stringify(msg));
 }
 
-// callThen performs a MessageSend in Go which can call the onReturn function
-// It does not return the value of the perform
+// callThen performs a MessageSend in Go which can call the onReturn function.
+// It does not return the value of the perform.
 //
 V8D.callThen = function(receiver, selector, onReturnFunction /*, arguments */ ) {
     var msg = {

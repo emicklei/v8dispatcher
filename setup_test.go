@@ -1,23 +1,9 @@
 package v8dispatcher
 
-import (
-	"testing"
-
-	"github.com/ry/v8worker"
-)
+import "testing"
 
 func init() {
 	Debug = true
-}
-
-func newWorkerAndDispatcher(t *testing.T) (*v8worker.Worker, *MessageDispatcher) {
-	dist := NewMessageDispatcher()
-	return dist.Worker(), dist
-}
-
-func benchNewWorkerAndDispatcher(b *testing.B) (*v8worker.Worker, *MessageDispatcher) {
-	dist := NewMessageDispatcher()
-	return dist.Worker(), dist
 }
 
 type recorder struct {
