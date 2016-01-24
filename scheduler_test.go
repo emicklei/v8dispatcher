@@ -1,14 +1,33 @@
 package v8dispatcher
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 	"time"
 )
 
-func TestFunctionSchedulerImmediate(t *testing.T) {
-	Log = func(level, msg string, args ...interface{}) {
-		t.Log(level, msg, args)
+func setupLog(t *testing.T) {
+	// COPIED from std Log definition
+	Log = func(level, msg string, kvs ...interface{}) {
+		// default uses standard logging
+		buf := new(bytes.Buffer)
+		fmt.Fprintf(buf, "[%s] %s", level, msg)
+		for i := 0; i < len(kvs); i = i + 2 {
+			var v interface{}
+			if len(kvs) == i+1 {
+				v = "*** missing ***"
+			} else {
+				v = kvs[i+1]
+			}
+			fmt.Fprintf(buf, ", %v = %v", kvs[i], v)
+		}
+		t.Log(buf.String())
 	}
+}
+
+func TestFunctionSchedulerImmediate(t *testing.T) {
+	setupLog(t)
 	worker, dist := newWorkerAndDispatcher(t)
 	rec := &recorder{}
 	_ = NewFunctionScheduler(dist)

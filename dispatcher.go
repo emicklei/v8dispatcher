@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/emicklei/v8worker"
+	"github.com/ry/v8worker"
 )
 
 var (
@@ -43,6 +43,8 @@ func NewMessageDispatcher() *MessageDispatcher {
 			Log("error", "script load error", "source", each, "err", err)
 		}
 	}
+	// install default console handling
+	d.RegisterFunc("console.log", ConsoleLog)
 	return d
 }
 
@@ -87,7 +89,7 @@ func (d *MessageDispatcher) SendSync(receiver string, method string, arguments .
 // ReceiveSync is a v8worker send sync handler.
 func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 	if Debug {
-		Log("ReceiveSync", "json", jsonFromJS)
+		Log("debug", "ReceiveSync", "json", jsonFromJS)
 	}
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
@@ -101,7 +103,7 @@ func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 // Receive is a v8worker send async handler.
 func (d *MessageDispatcher) Receive(jsonFromJS string) {
 	if Debug {
-		Log("Receive", "json", jsonFromJS)
+		Log("debug", "Receive", "json", jsonFromJS)
 	}
 	var msg MessageSend
 	if err := json.NewDecoder(strings.NewReader(jsonFromJS)).Decode(&msg); err != nil {
@@ -116,7 +118,7 @@ func (d *MessageDispatcher) Receive(jsonFromJS string) {
 // lookup by "receiver" first then "selector" then "receiver.selector" of the message argument.
 func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 	if Debug {
-		Log("dispatch", "msg", msg)
+		Log("debug", "dispatch", "msg", msg)
 	}
 	var result interface{}
 	var err error
@@ -145,6 +147,25 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 		Log("error", "perform failed", "err", err.Error())
 		return err.Error() // TODO
 	}
+	// if a callback is given then call this first
+	if len(msg.Callback) > 0 {
+		callDispatch := MessageSend{
+			Receiver:       "V8D",
+			Selector:       "callDispatch",
+			Arguments:      []interface{}{msg.Callback},
+			IsAsynchronous: true,
+		}
+		_, err := d.send(callDispatch)
+		if err != nil {
+			Log("error", "callDispatch failed", "err", err.Error())
+			return err.Error() // TODO
+		}
+	}
+	// if no return value is expected then we are done
+	if msg.IsAsynchronous {
+		return ""
+	}
+	// return the JSON for the result
 	data, err := json.Marshal(result)
 	if err != nil {
 		Log("error", "marshal error", "err", err.Error())
@@ -153,9 +174,11 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 	return string(data)
 }
 
+// send will perform a MessageSend in Javascript
+// if the message is synchronous then return the result of the Javascript function.
 func (d *MessageDispatcher) send(msg MessageSend) (interface{}, error) {
 	if Debug {
-		Log("send", "msg", msg)
+		Log("debug", "send", "msg", msg)
 	}
 	callbackJSON, err := msg.JSON()
 	if err != nil {
@@ -167,14 +190,14 @@ func (d *MessageDispatcher) send(msg MessageSend) (interface{}, error) {
 			Log("error", "work send failure", "receiver", msg.Receiver, "method", msg.Selector, "err", err)
 			return nil, err
 		}
-	} else {
-		msg := d.worker.SendSync(callbackJSON)
-		var value interface{}
-		if err := json.Unmarshal([]byte(msg), &value); err != nil {
-			Log("error", "unmarshal Javascript message failure", "msg", msg, "err", err)
-			return nil, err
-		}
-		return value, nil
+		return nil, nil
 	}
-	return nil, nil
+	// synchronous
+	reply := d.worker.SendSync(callbackJSON)
+	var value interface{}
+	if err := json.Unmarshal([]byte(reply), &value); err != nil {
+		Log("error", "unmarshal Javascript message failure", "msg", msg, "reply", reply, "err", err)
+		return nil, err
+	}
+	return value, nil
 }

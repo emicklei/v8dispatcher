@@ -45,7 +45,7 @@ func (s *FunctionScheduler) source() string {
 // Perform handles a message send from Javascript. FunctionScheduler is a MessageHandler.
 func (s *FunctionScheduler) Perform(msg MessageSend) (interface{}, error) {
 	if Debug {
-		Log("Perform", "msg", msg)
+		Log("debug", "Perform", "msg", msg)
 	}
 	if "schedule" != msg.Selector {
 		return nil, fmt.Errorf(ErrNoSuchMethod, "V8D.scheduler", msg.Selector)

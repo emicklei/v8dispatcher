@@ -3,7 +3,7 @@ package v8dispatcher
 import (
 	"testing"
 
-	"github.com/emicklei/v8worker"
+	"github.com/ry/v8worker"
 )
 
 func init() {

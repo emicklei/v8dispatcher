@@ -24,3 +24,8 @@ var Log = func(level, msg string, kvs ...interface{}) {
 	}
 	log.Println(buf.String())
 }
+
+func ConsoleLog(msg MessageSend) (interface{}, error) {
+	log.Println(msg.Arguments...)
+	return nil, nil
+}

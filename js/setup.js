@@ -98,11 +98,11 @@ V8D.call = function(receiver, selector /*, arguments */ ) {
 // callThen performs a MessageSend in Go which can call the onReturn function
 // It does not return the value of the perform
 //
-V8D.callThen = function(receiver, selector, onReturn /*, arguments */ ) {
+V8D.callThen = function(receiver, selector, onReturnFunction /*, arguments */ ) {
     var msg = {
         "receiver": receiver,
         "selector": selector,
-        "callback": onReturn,
+        "callback": V8D.function_registry.put(onReturnFunction),
         "args": [].slice.call(arguments).splice(3)
     };
     $send(JSON.stringify(msg));
