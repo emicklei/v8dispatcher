@@ -8,10 +8,6 @@ import (
 	"github.com/ry/v8worker"
 )
 
-var (
-	ErrNoSuchMethod = "%s does not understand %s"
-)
-
 // MessageSendHandlerFunc is a function that can be called by the dispatcher if registered using the message selector or receiver.selector.
 type MessageSendHandlerFunc func(MessageSend) (interface{}, error)
 

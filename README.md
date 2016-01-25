@@ -90,9 +90,9 @@ Register an instance of MusicPlayer
 
 __Go__
 
-		player := MusicPlayer{}
-		md := NewMessageDispatcher()
-		md.Register("player", player)
+	player := MusicPlayer{}
+	md := NewMessageDispatcher()
+	md.Register("player", player)
 
 Now you can use this from Javascript
 
@@ -101,4 +101,4 @@ __Javascript__
 	V8D.call("player","start");
 	
 	
-	
+(c) 2016, http://ernestmicklei.com. MIT License	
