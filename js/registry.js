@@ -4,7 +4,8 @@
  *
  * author: emicklei
  */
-var V8D = V8D || {};
+
+var V8D = V8D || {"globals":{}};
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 V8D.uuid = function() {

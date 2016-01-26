@@ -83,6 +83,27 @@ func (d *MessageDispatcher) CallReturn(receiver string, method string, arguments
 	})
 }
 
+// Set will add/replace the value for the globals field of V8D in Javascript.
+func (d *MessageDispatcher) Set(variableName string, value interface{}) error {
+	_, err := d.send(MessageSend{
+		Receiver:       "V8D",
+		Selector:       "set",
+		Arguments:      []interface{}{variableName, value},
+		IsAsynchronous: true,
+	})
+	return err
+}
+
+// Get will return the value for the globals field of V8D in Javascript.
+func (d *MessageDispatcher) Get(variableName string) (interface{}, error) {
+	return d.send(MessageSend{
+		Receiver:       "V8D",
+		Selector:       "get",
+		Arguments:      []interface{}{variableName},
+		IsAsynchronous: false,
+	})
+}
+
 // ReceiveSync is a v8worker send sync handler.
 func (d *MessageDispatcher) ReceiveSync(jsonFromJS string) string {
 	if Debug {

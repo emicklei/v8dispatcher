@@ -87,6 +87,40 @@ func TestCallThen(t *testing.T) {
 	t.Logf("%#v", rec.msg)
 }
 
+func TestSetGet(t *testing.T) {
+	dist := NewMessageDispatcher()
+	rec := &recorder{}
+	dist.Register("console", rec)
+	dist.Set("SomeVar", 42)
+	if err := dist.Worker().Load("TestSet.js", `
+		console.log(V8D.globals["SomeVar"]);
+	`); err != nil {
+		t.Fatal(err)
+	}
+	if rec.msg == nil {
+		t.Fatal("no msg recorded")
+	}
+	if len(rec.msg.Arguments) == 0 {
+		t.Fatal("no arguments recorded")
+	}
+	i, ok := rec.msg.Arguments[0].(float64)
+	if !ok {
+		t.Fatalf("float64 expected, got %T", rec.msg.Arguments[0])
+	}
+	if i != 42 {
+		t.Fail()
+	}
+	t.Logf("%#v", rec.msg)
+
+	v, err := dist.Get("SomeVar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if i != v {
+		t.Fail()
+	}
+}
+
 func BenchmarkRequestFromGo(b *testing.B) {
 	dist := NewMessageDispatcher()
 	worker := dist.Worker()

@@ -5,8 +5,6 @@
  * author: emicklei
  */
 
-var V8D = V8D || {};
-
 V8D.receiveCallback = function(msg) {
     var obj = JSON.parse(msg);
     var context = this;
@@ -106,4 +104,16 @@ V8D.callThen = function(receiver, selector, onReturnFunction /*, arguments */ ) 
         "args": [].slice.call(arguments).splice(3)
     };
     $send(JSON.stringify(msg));
+}
+
+// set adds/replaces the value for a variable in the globals field of V8D.
+//
+V8D.set = function(variableName,itsValue) {
+	V8D.globals[variableName] = itsValue;
+}
+
+// get returns the value for a variable in the globals field of V8D.
+//
+V8D.get = function(variableName) {
+	return V8D.globals[variableName];
 }
