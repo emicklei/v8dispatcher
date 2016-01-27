@@ -106,14 +106,14 @@ V8D.callThen = function(receiver, selector, onReturnFunction /*, arguments */ ) 
     $send(JSON.stringify(msg));
 }
 
-// set adds/replaces the value for a variable in the globals field of V8D.
+// set adds/replaces the value for a variable in the global scope.
 //
 V8D.set = function(variableName,itsValue) {
-	V8D.globals[variableName] = itsValue;
+	V8D.outerThis[variableName] = itsValue;
 }
 
-// get returns the value for a variable in the globals field of V8D.
+// get returns the value for a variable in the global scope.
 //
 V8D.get = function(variableName) {
-	return V8D.globals[variableName];
+	return V8D.outerThis[variableName];
 }

@@ -51,7 +51,7 @@ __Go__
 
 __Javascript__
 
-	V8D.call("handleEvent", {"data": "some event data"});
+	V8D.call("this","handleEvent", {"data": "some event data"});
 	
 ### Asynchronous call from Go
 

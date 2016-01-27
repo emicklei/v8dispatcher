@@ -53,7 +53,7 @@ func TestCallReturn(t *testing.T) {
 	if len(s) == 0 {
 		t.Fail()
 	}
-	t.Logf("%#v", rec.msg)
+	//t.Logf("%#v", rec.msg)
 }
 
 func TestCallThen(t *testing.T) {
@@ -84,7 +84,7 @@ func TestCallThen(t *testing.T) {
 	if s != "callThen" {
 		t.Fail()
 	}
-	t.Logf("%#v", rec.msg)
+	//t.Logf("%#v", rec.msg)
 }
 
 func TestSetGet(t *testing.T) {
@@ -93,7 +93,7 @@ func TestSetGet(t *testing.T) {
 	dist.Register("console", rec)
 	dist.Set("SomeVar", 42)
 	if err := dist.Worker().Load("TestSet.js", `
-		console.log(V8D.globals["SomeVar"]);
+		console.log(this["SomeVar"]);
 	`); err != nil {
 		t.Fatal(err)
 	}
@@ -119,6 +119,49 @@ func TestSetGet(t *testing.T) {
 	if i != v {
 		t.Fail()
 	}
+}
+
+func TestRoundTripWithMap(t *testing.T) {
+	dist := NewMessageDispatcher()
+	var gotArgument interface{}
+	var gotReturn interface{}
+	dist.RegisterFunc("putBasket", func(msg MessageSend) (interface{}, error) {
+		gotArgument = msg.Arguments[0]
+		return nil, nil
+	})
+	if err := dist.Worker().Load("TestRoundTripWithMap.js", `
+		function getBasket(basket){
+			V8D.call("","putBasket",basket);
+			return basket
+		};
+	`); err != nil {
+		t.Fatal(err)
+	}
+	gotReturn, err := dist.CallReturn("this", "getBasket", map[string]interface{}{"size": 42})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotArgument == nil {
+		t.Error("argument not caught")
+	}
+	if gotReturn == nil {
+		t.Error("return not passes")
+	}
+	mapA, ok := gotArgument.(map[string]interface{})
+	if !ok {
+		t.Error("map argument expected")
+	}
+	mapR, ok := gotReturn.(map[string]interface{})
+	if !ok {
+		t.Error("map return expected")
+	}
+	if mapA["size"] != float64(42) {
+		t.Errorf("42 expected, got %v", mapA["size"])
+	}
+	if mapR["size"] != float64(42) {
+		t.Errorf("42 expected, got %v", mapR["size"])
+	}
+	t.Log(gotArgument, gotReturn)
 }
 
 func BenchmarkRequestFromGo(b *testing.B) {

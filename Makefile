@@ -12,3 +12,6 @@ build:
 # go get -u github.com/jteeuwen/go-bindata/...		
 javascript:
 	go-bindata -o="./javascript.go" -pkg="v8dispatcher" js/
+	
+test: javascript
+	go test -v

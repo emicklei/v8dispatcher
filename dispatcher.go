@@ -35,7 +35,7 @@ func NewMessageDispatcher() *MessageDispatcher {
 	d.worker = w
 	// load scripts
 	for _, each := range []string{"js/registry.js", "js/setup.js", "js/console.js"} {
-		data, _ := getAsset(each)
+		data, _ := Asset(each)
 		if err := w.Load(each, string(data)); err != nil {
 			Log("error", "script load error", "source", each, "err", err)
 		}
@@ -83,7 +83,7 @@ func (d *MessageDispatcher) CallReturn(receiver string, method string, arguments
 	})
 }
 
-// Set will add/replace the value for the globals field of V8D in Javascript.
+// Set will add/replace the value for a global variable in Javascript.
 func (d *MessageDispatcher) Set(variableName string, value interface{}) error {
 	_, err := d.send(MessageSend{
 		Receiver:       "V8D",
@@ -94,7 +94,7 @@ func (d *MessageDispatcher) Set(variableName string, value interface{}) error {
 	return err
 }
 
-// Get will return the value for the globals field of V8D in Javascript.
+// Get will return the value for the global variable in Javascript.
 func (d *MessageDispatcher) Get(variableName string) (interface{}, error) {
 	return d.send(MessageSend{
 		Receiver:       "V8D",
