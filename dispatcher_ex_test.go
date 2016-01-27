@@ -4,10 +4,10 @@ import "fmt"
 
 func ExampleMessageDispatcher_CallReturn() {
 	md := NewMessageDispatcher()
-	now, _ := md.CallReturn("this", "now")
 	md.Worker().Load("ex.js", `
 		function now() {
 			return new Date();
 		}`)
+	now, _ := md.CallReturn("this", "now")
 	fmt.Println(now)
 }
