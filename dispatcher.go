@@ -34,10 +34,16 @@ func NewMessageDispatcher() *MessageDispatcher {
 	w := v8worker.New(d.Receive, d.ReceiveSync)
 	d.worker = w
 	// load scripts
-	for _, each := range []string{"js/registry.js", "js/setup.js", "js/console.js"} {
-		data, _ := Asset(each)
-		if err := w.Load(each, string(data)); err != nil {
-			Log("error", "script load error", "source", each, "err", err)
+	for _, each := range []struct {
+		name   string
+		source string
+	}{
+		{"registry.js", registry_js()},
+		{"setup.js", setup_js()},
+		{"console.js", console_js()},
+	} {
+		if err := w.Load(each.name, each.source); err != nil {
+			Log("error", "script load error", "source", each.name, "err", err)
 		}
 	}
 	// install default console handling

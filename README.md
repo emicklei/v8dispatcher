@@ -2,7 +2,7 @@
 
 v8dispatcher is a Go package for communicating to and from Javascript running in V8.
 It provides a message abstraction layer on top of the v8worker package which has been enhanced to support synchronous messaging.
-The v8dispatcher has a MessageDispatcher component that is used to dispatch MessageSend values to function calls, both in Go and in Javascript.
+The v8dispatcher has a MessageDispatcher component that is used to dispatch MessageSend values to function calls, both in Go and in Javascript (no reflection).
 
 ### Calling Go from Javascript
 
@@ -15,13 +15,13 @@ __Go__
 	
 __Javascript__
 
-	var now = V8D.callReturn("now");		
+	var now = V8D.callReturn("","now");		
 	
-This is the minimal example for which a simple function (no arguments) is registered and called from Javascript when loading the source like this
+This is the minimal example for which a simple function (no arguments) is registered and called from Javascript when loading the source like this:
 
 __Go__	
 	
-	md.Worker().Load("example.js", `var now = V8D.callReturn("now");`)
+	md.Worker().Load("example.js", `var now = V8D.callReturn("","now");`)
 
 
 ### Calling Javascript from Go
@@ -44,14 +44,15 @@ __Go__
 
 	md := NewMessageDispatcher()
 	md.RegisterFunc("handleEvent",func(m MessageSend) (interface{},error) {
-		data := m.Arguments[0]["data"]
+		dataMap := m.Arguments[0].(map[string]interface{})
+		data := dataMap["data"]
 		...
 		return nil, nil	
 	})
 
 __Javascript__
 
-	V8D.call("this","handleEvent", {"data": "some event data"});
+	V8D.call("","handleEvent", {"data": "some event data"});
 	
 ### Asynchronous call from Go
 
@@ -67,6 +68,18 @@ __Go__
 	md.Call("this","handleEvent",map[string]interface{}{
 		"data" : "some event data",
 	})
+	
+### Set and Get global variables
+
+__Go__
+		
+	md := NewMessageDispatcher()
+	md.Set("shoeSize",42)
+	shoeSize, _ := md.Get("shoeSize")
+	
+__Javascript__
+
+	var shoeSize = this["shoeSize"]	
 	
 ### MessageHandler
 

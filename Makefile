@@ -13,5 +13,5 @@ build:
 javascript:
 	go-bindata -o="./javascript.go" -pkg="v8dispatcher" js/
 	
-test: javascript
+test:
 	go test -v
