@@ -1,4 +1,4 @@
-FROM golang:1.5.3
+FROM golang:1.6
 
 RUN apt-get update
 RUN apt-get -y install git subversion make g++ python curl chrpath lbzip2 pkg-config && apt-get clean
