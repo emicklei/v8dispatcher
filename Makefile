@@ -3,7 +3,7 @@
 dockerbuild:
 	go vet
 	go install
-	go test -v
+	GODEBUG=cgocheck=0 go test -v
 	
 build:
 	docker build -t v8d-builder . \
