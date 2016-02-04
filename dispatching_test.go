@@ -12,13 +12,13 @@ var someApiSrc = `
 			return V8D.callReturn("someApi","now");
 		};	
 		
-		someApi.callThen = function() {
+		someApi.testCallThen = function() {
 			V8D.callThen("someApi","now", function() {
 				console.log("callThen");
 			});
 		};	
 		
-		someApi.callThenArgument = function() {
+		someApi.testCallThenArgument = function() {
 			V8D.callThen("someApi","now", function(argument) {
 				console.log("callThen with",argument);
 			});
@@ -67,7 +67,7 @@ func TestCallThen(t *testing.T) {
 	})
 
 	if err := dist.Worker().Load("TestRequestNow.js", `
-		someApi.callThen()
+		someApi.testCallThen()
 	`); err != nil {
 		t.Fatal(err)
 	}
@@ -85,6 +85,37 @@ func TestCallThen(t *testing.T) {
 		t.Fail()
 	}
 	//t.Logf("%#v", rec.msg)
+}
+
+func TestCallThenWithArgument(t *testing.T) {
+	dist := NewMessageDispatcher()
+	rec := &recorder{}
+	dist.Register("console", rec)
+	dist.Worker().Load("someApi.js", someApiSrc)
+
+	dist.RegisterFunc("someApi.now", func(msg MessageSend) (interface{}, error) {
+		return time.Now(), nil
+	})
+
+	if err := dist.Worker().Load("TestRequestNow.js", `
+		someApi.testCallThenArgument()
+	`); err != nil {
+		t.Fatal(err)
+	}
+	if rec.msg == nil {
+		t.Fatal("no msg recorded")
+	}
+	if len(rec.msg.Arguments) == 0 {
+		t.Fatal("no arguments recorded")
+	}
+	s, ok := rec.msg.Arguments[0].(string)
+	if !ok {
+		t.Fatal("string expected")
+	}
+	if s != "callThen with" {
+		t.Errorf("got %s", s)
+	}
+	t.Logf("argument=%#v", rec.msg.Arguments[1])
 }
 
 func TestSetGet(t *testing.T) {

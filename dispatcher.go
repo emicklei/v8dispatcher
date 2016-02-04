@@ -171,12 +171,25 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 		Log("error", "perform failed", "err", err.Error())
 		return err.Error() // TODO
 	}
-	// if a callback is given then call this first
+
+	// if no return value is expected and no callback is requested then we are done
+	if msg.IsAsynchronous && len(msg.Callback) == 0 {
+		return ""
+	}
+
+	// make the JSON for the result
+	data, err := json.Marshal(result)
+	if err != nil {
+		Log("error", "marshal error", "err", err.Error())
+		return err.Error() // TODO
+	}
+
+	// if a callback is given then call this first with the result
 	if len(msg.Callback) > 0 {
 		callDispatch := MessageSend{
 			Receiver:       "V8D",
 			Selector:       "callDispatch",
-			Arguments:      []interface{}{msg.Callback},
+			Arguments:      append([]interface{}{msg.Callback}, string(data)),
 			IsAsynchronous: true,
 		}
 		_, err := d.send(callDispatch)
@@ -184,16 +197,6 @@ func (d *MessageDispatcher) dispatch(msg MessageSend) string {
 			Log("error", "callDispatch failed", "err", err.Error())
 			return err.Error() // TODO
 		}
-	}
-	// if no return value is expected then we are done
-	if msg.IsAsynchronous {
-		return ""
-	}
-	// return the JSON for the result
-	data, err := json.Marshal(result)
-	if err != nil {
-		Log("error", "marshal error", "err", err.Error())
-		return err.Error() // TODO
 	}
 	return string(data)
 }

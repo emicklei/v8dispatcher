@@ -43,13 +43,13 @@ $recvSync(V8D.receiveCallback);
 // callDispatch is used from Go to call a callback function that was registered.
 //
 V8D.callDispatch = function(functionRef /*, arguments */ ) {
-    var args = [].slice.call(arguments).splice(1);
+    var jsonArgs = [].slice.call(arguments).splice(1);
     var callback = V8D.function_registry.take(functionRef)
     if (V8D.function_registry.none == callback) {
         $print("[JS] no function for reference:" + functionRef);
         return;
-    }
-    callback.apply(this, args);
+    }	
+    callback.apply(this, jsonArgs.map(function(each){ return JSON.parse(each); }));
 }
 
 // MessageSend is a constructor.
