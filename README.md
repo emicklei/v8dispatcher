@@ -1,8 +1,11 @@
 # v8dispatcher
 
 v8dispatcher is a Go package for communicating to and from Javascript running in V8.
+
 It provides a message abstraction layer on top of the v8worker package which has been enhanced to support synchronous messaging.
 The v8dispatcher has a MessageDispatcher component that is used to dispatch MessageSend values to function calls, both in Go and in Javascript (no reflection).
+
+[![GoDoc](https://godoc.org/github.com/emicklei/v8dispatcher?status.svg)](https://godoc.org/github.com/emicklei/v8dispatcher)
 
 ### Calling Go from Javascript
 
