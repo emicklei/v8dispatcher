@@ -1,6 +1,9 @@
 package v8dispatcher
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // MessageSend encapsulates a performable message between Javascript and Go
 type MessageSend struct {
@@ -30,9 +33,5 @@ func (m MessageSend) JSON() (string, error) {
 
 // String exists for debugging
 func (m MessageSend) String() string {
-	s, err := m.JSON()
-	if err != nil {
-		return err.Error()
-	}
-	return s
+	return fmt.Sprintf("%#v", m)
 }

@@ -28,7 +28,6 @@ Dispatching MessageSend values to functions in Go requires the registration of h
 The RegisterFunc can be used to map a function name (the MessageSend receiver and/or selector) to a Go function.
 Alternatively, by implementing the MessageHandler interface, the mapping of selectors will have to be implemented in the Perform method.
 
-
 Dispatching strategy
 
 In Javascript, the receiver field of a MessageSend is used to find the namespace starting at the global.
@@ -37,6 +36,8 @@ An empty receiver or "this" refers to the gobal namespace. The selector is used 
 In Go, the receiver field of a MessageSend is used to find a handler (MessageSendHandler) in the registry of the dispatcher.
 If found, the handler's Perform method is called with the MessageSend in which the selector can be inspected.
 An empty receiver will cause the dispatcher to look for a registered function (MessageSendHandlerFunc) instead.
+
+A MessageDispatcher has a default function mapped on "console.log" that call the standard log.Println.
 
 For examples see the README.md and the tests.
 

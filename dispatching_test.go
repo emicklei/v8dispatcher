@@ -152,6 +152,30 @@ func TestSetGet(t *testing.T) {
 	}
 }
 
+func TestSetGetHash(t *testing.T) {
+	dist := NewMessageDispatcher()
+	rec := &recorder{}
+	dist.Register("console", rec)
+	dist.Set("map", map[string]interface{}{
+		"day": "sunday",
+		"pi":  3.14159,
+	})
+	v, err := dist.Get("map")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		t.Errorf("map expected")
+	}
+	if got, want := m["day"], "sunday"; got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+	if got, want := m["pi"], float64(3.14159); got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
 func TestRoundTripWithMap(t *testing.T) {
 	dist := NewMessageDispatcher()
 	var gotArgument interface{}
