@@ -10,6 +10,7 @@ Methods available in Go to invoke custom functions in Javascript (see MessageDis
 
 	// Call is an asynchronous call to Javascript and does no expect a return value.
 	// CallReturn is synchronous call to Javascript and expects a return value.
+	// Callback is an asynchronous call to Javascript that will perform a registered function with optional arguments.
 
 Functions available in Javascript to invoke custom functions in Go (see js folder):
 

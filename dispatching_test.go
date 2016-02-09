@@ -115,7 +115,7 @@ func TestCallThenWithArgument(t *testing.T) {
 	if s != "callThen with" {
 		t.Errorf("got %s", s)
 	}
-	t.Logf("argument=%#v", rec.msg.Arguments[1])
+	//t.Logf("argument=%#v", rec.msg.Arguments[1])
 }
 
 func TestSetGet(t *testing.T) {
@@ -141,8 +141,6 @@ func TestSetGet(t *testing.T) {
 	if i != 42 {
 		t.Fail()
 	}
-	t.Logf("%#v", rec.msg)
-
 	v, err := dist.Get("SomeVar")
 	if err != nil {
 		t.Fatal(err)

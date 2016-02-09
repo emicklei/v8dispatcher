@@ -2,10 +2,6 @@ package v8dispatcher
 
 import "testing"
 
-func init() {
-	Debug = true
-}
-
 type recorder struct {
 	moduleName string
 	source     string

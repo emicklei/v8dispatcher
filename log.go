@@ -6,8 +6,6 @@ import (
 	"log"
 )
 
-var Debug = false
-
 // Log can be used to inject your own logging framework
 var Log = func(level, msg string, kvs ...interface{}) {
 	// default uses standard logging
