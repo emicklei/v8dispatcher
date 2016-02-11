@@ -14,7 +14,7 @@ ENV PATH $PATH:/usr/local/depot_tools
 # v8worker
 RUN git clone https://github.com/ry/v8worker.git /go/src/github.com/ry/v8worker
 WORKDIR /go/src/github.com/ry/v8worker
-RUN make install && make distclean
+RUN make install
 
 WORKDIR /go/src/github.com/emicklei/v8dispatcher
 ADD . /go/src/github.com/emicklei/v8dispatcher
