@@ -94,10 +94,10 @@ __Go__
 	
 	func (m MusicPlayer) Perform(m MessageSend) (interface{}, error) {
 		switch (m.Selector) {
-			case "start": { ... }
-			case "stop": { ... }
-			case "pause": { ... }
-			case "reset": { ... }
+			case "start":
+			case "stop":
+			case "pause": 
+			case "reset": 
 			default: return nil , errors.New("unknown selector")
 		}
 	}

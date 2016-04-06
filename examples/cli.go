@@ -41,11 +41,19 @@ func main() {
 		})
 
 	// set debug level
-	v8dispatcher.Debug = *verbose
+	v8d.Trace(*verbose)
 	loop()
 }
 
 func processLine(line string) string {
+	if strings.HasPrefix(line, "console.log") {
+		err := v8d.Worker().Load("line0.js", line)
+		if err != nil {
+			return err.Error()
+		}
+		return ""
+	}
+	// wrap expression in a console call to see the result value
 	err := v8d.Worker().Load("line0.js", fmt.Sprintf("console.log(%s);", strings.TrimRight(line, ";")))
 	if err != nil {
 		return err.Error()
